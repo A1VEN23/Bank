@@ -1,353 +1,177 @@
 import { useState } from "react";
-import {
-  ShieldCheck, ArrowUpRight, ArrowDownLeft, ArrowLeftRight,
-  TrendingUp, X, ChevronRight, Cpu, CheckCircle2, Hash,
-  Zap, Clock, Globe
-} from "lucide-react";
 
-interface Transaction {
+const IVORY = "#F5F0E8";
+const IVORY_DIM = "rgba(245,240,232,0.05)";
+const IVORY_BORDER = "rgba(245,240,232,0.08)";
+const WARM = "#D4926A";
+
+type Tx = {
   id: string;
   type: "receive" | "send" | "swap" | "deposit";
-  description: string;
+  desc: string;
   amount: string;
-  amountUSD: string;
-  currency: string;
+  sub: string;
   positive: boolean;
   time: string;
   date: string;
-  aiScore: number;
+  score: number;
   txid: string;
-  gasFee: string;
+  fee: string;
   network: string;
-  legalNode: string;
-  status: "confirmed" | "pending";
-  counterparty: string;
-}
+  node: string;
+  party: string;
+};
 
-const transactions: Transaction[] = [
-  {
-    id: "1",
-    type: "receive",
-    description: "Received Bitcoin",
-    amount: "+0.0842 BTC",
-    amountUSD: "+$3,978.24",
-    currency: "BTC",
-    positive: true,
-    time: "14:32",
-    date: "Today",
-    aiScore: 98,
-    txid: "a1b2c3d4e5f6789012345678901234567890abcdef1234567890",
-    gasFee: "0.000021 BTC",
-    network: "Bitcoin Mainnet",
-    legalNode: "BY-NODE-047",
-    status: "confirmed",
-    counterparty: "bc1q...k8z2",
-  },
-  {
-    id: "2",
-    type: "swap",
-    description: "B2B Bridge: RUB → CNY",
-    amount: "150,000 RUB",
-    amountUSD: "−$1,650",
-    currency: "RUB",
-    positive: false,
-    time: "11:15",
-    date: "Today",
-    aiScore: 100,
-    txid: "tx_bridge_0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d",
-    gasFee: "375 RUB",
-    network: "PBT Bridge Layer",
-    legalNode: "RU-PBT-012",
-    status: "confirmed",
-    counterparty: "CNY Merchant 8821",
-  },
-  {
-    id: "3",
-    type: "deposit",
-    description: "Crypto Deposit Opened",
-    amount: "+8.0% APY",
-    amountUSD: "2,500 USDT",
-    currency: "USDT",
-    positive: true,
-    time: "09:48",
-    date: "Today",
-    aiScore: 99,
-    txid: "dep_0x2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f",
-    gasFee: "0 USDT",
-    network: "TON Blockchain",
-    legalNode: "BY-DEFI-003",
-    status: "confirmed",
-    counterparty: "Savings Protocol v2",
-  },
-  {
-    id: "4",
-    type: "send",
-    description: "Sent USDT",
-    amount: "−850 USDT",
-    amountUSD: "−$850",
-    currency: "USDT",
-    positive: false,
-    time: "18:24",
-    date: "Yesterday",
-    aiScore: 97,
-    txid: "0x9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d",
-    gasFee: "1.2 USDT",
-    network: "TON Blockchain",
-    legalNode: "BY-NODE-019",
-    status: "confirmed",
-    counterparty: "TVM...4fK9",
-  },
-  {
-    id: "5",
-    type: "receive",
-    description: "Staking Reward",
-    amount: "+12.45 TON",
-    amountUSD: "+$76.93",
-    currency: "TON",
-    positive: true,
-    time: "06:00",
-    date: "Yesterday",
-    aiScore: 100,
-    txid: "ton_reward_7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c",
-    gasFee: "0.01 TON",
-    network: "TON Blockchain",
-    legalNode: "AUTO-STAKE-01",
-    status: "confirmed",
-    counterparty: "Staking Pool #7",
-  },
-  {
-    id: "6",
-    type: "swap",
-    description: "Swapped ETH → USDT",
-    amount: "0.5 ETH",
-    amountUSD: "+$1,309.23",
-    currency: "ETH",
-    positive: true,
-    time: "13:11",
-    date: "May 26",
-    aiScore: 96,
-    txid: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
-    gasFee: "0.0018 ETH",
-    network: "Ethereum Mainnet",
-    legalNode: "RU-NODE-088",
-    status: "confirmed",
-    counterparty: "DEX Router v3",
-  },
+const TXS: Tx[] = [
+  { id:"1", type:"receive", desc:"Received Bitcoin",        amount:"+0.0842 BTC",  sub:"+$3,978",    positive:true,  time:"14:32", date:"Today",     score:98,  txid:"a1b2c3d4e5f67890…",          fee:"0.000021 BTC", network:"Bitcoin Mainnet",  node:"BY-NODE-047",   party:"bc1q…k8z2"   },
+  { id:"2", type:"swap",    desc:"B2B Bridge: RUB → CNY",  amount:"150,000 RUB",  sub:"−$1,650",    positive:false, time:"11:15", date:"Today",     score:100, txid:"tx_bridge_0x7a8b…",         fee:"375 RUB",      network:"PBT Bridge Layer", node:"RU-PBT-012",    party:"CNY Merchant" },
+  { id:"3", type:"deposit", desc:"Crypto Deposit Opened",  amount:"+8.0% APY",    sub:"2,500 USDT", positive:true,  time:"09:48", date:"Today",     score:99,  txid:"dep_0x2c3d4e5f…",           fee:"0 USDT",       network:"TON Blockchain",   node:"BY-DEFI-003",   party:"Savings v2"   },
+  { id:"4", type:"send",    desc:"Sent USDT",              amount:"−850 USDT",    sub:"−$850",      positive:false, time:"18:24", date:"Yesterday", score:97,  txid:"0x9e8d7c6b5a4f…",           fee:"1.2 USDT",     network:"TON Blockchain",   node:"BY-NODE-019",   party:"TVM…4fK9"     },
+  { id:"5", type:"receive", desc:"Staking Reward",         amount:"+12.45 TON",   sub:"+$76.93",    positive:true,  time:"06:00", date:"Yesterday", score:100, txid:"ton_reward_7f8a…",          fee:"0.01 TON",     network:"TON Blockchain",   node:"AUTO-STAKE-01", party:"Staking Pool" },
+  { id:"6", type:"swap",    desc:"Swapped ETH → USDT",    amount:"0.5 ETH",      sub:"+$1,309",    positive:true,  time:"13:11", date:"May 26",    score:96,  txid:"0x1a2b3c4d5e6f…",           fee:"0.0018 ETH",   network:"Ethereum Mainnet", node:"RU-NODE-088",   party:"DEX Router v3"},
 ];
 
-function ScoreBadge({ score }: { score: number }) {
-  const color = score >= 98 ? "#00ff80" : score >= 90 ? "#fbbf24" : "#ff4d4d";
+const TYPE_GLYPH: Record<string, string> = {
+  receive: "↓", send: "↑", swap: "⇄", deposit: "◈",
+};
+
+const grouped: Record<string, Tx[]> = {};
+TXS.forEach((t) => { if (!grouped[t.date]) grouped[t.date] = []; grouped[t.date].push(t); });
+
+function ScorePill({ score }: { score: number }) {
+  const ok = score >= 95;
   return (
-    <div
-      className="flex items-center gap-1 px-1.5 py-0.5 rounded-full"
-      style={{ background: `${color}18`, border: `1px solid ${color}40` }}
-    >
-      <Cpu size={8} style={{ color }} />
-      <span style={{ fontSize: "8px", color, fontWeight: 700 }}>{score}</span>
+    <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "2px 7px", borderRadius: "6px", background: ok ? "rgba(212,146,106,0.08)" : "rgba(255,100,100,0.08)", border: `1px solid ${ok ? "rgba(212,146,106,0.2)" : "rgba(255,100,100,0.2)"}` }}>
+      <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: ok ? WARM : "#ff6464" }} />
+      <span style={{ color: ok ? WARM : "#ff6464", fontSize: "9px", fontWeight: 600 }}>{score}</span>
     </div>
   );
 }
 
-function TxIcon({ type }: { type: Transaction["type"] }) {
-  const config = {
-    receive: { Icon: ArrowDownLeft, color: "#00ff80", bg: "rgba(0,255,128,0.12)" },
-    send: { Icon: ArrowUpRight, color: "#ff6b6b", bg: "rgba(255,107,107,0.12)" },
-    swap: { Icon: ArrowLeftRight, color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
-    deposit: { Icon: TrendingUp, color: "#fbbf24", bg: "rgba(251,191,36,0.12)" },
-  }[type];
-  const { Icon, color, bg } = config;
+function DetailRow({ label, value, hi }: { label: string; value: string; hi?: boolean }) {
   return (
-    <div
-      className="flex items-center justify-center rounded-2xl"
-      style={{ width: "40px", height: "40px", background: bg }}
-    >
-      <Icon size={16} style={{ color }} />
+    <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid rgba(245,240,232,0.04)" }}>
+      <span style={{ color: "rgba(245,240,232,0.25)", fontSize: "11px" }}>{label}</span>
+      <span style={{ color: hi ? WARM : IVORY, fontSize: "11px", opacity: hi ? 1 : 0.7, fontFamily: label === "TXID" ? "monospace" : "inherit", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
     </div>
   );
 }
 
 export default function HistoryScreen() {
-  const [selected, setSelected] = useState<Transaction | null>(null);
-
-  const grouped: Record<string, Transaction[]> = {};
-  transactions.forEach((tx) => {
-    if (!grouped[tx.date]) grouped[tx.date] = [];
-    grouped[tx.date].push(tx);
-  });
+  const [selected, setSelected] = useState<Tx | null>(null);
 
   return (
-    <div className="px-4 pt-2 pb-4">
+    <div style={{ padding: "20px 22px 20px", position: "relative" }}>
+
       {/* Header */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2 mb-1">
-          <Cpu size={16} style={{ color: "#818cf8" }} />
-          <span className="text-xs text-white/40 uppercase tracking-wider font-medium">Neural AML Engine v4.2</span>
+      <div style={{ marginBottom: "24px" }}>
+        <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "10px" }}>Neural AML Engine v4.2</div>
+        <div style={{ fontSize: "28px", fontWeight: 200, color: IVORY, letterSpacing: "-1px", lineHeight: 1.2, marginBottom: "16px" }}>
+          Transaction<br /><span style={{ color: WARM }}>Feed</span>
         </div>
-        <h2 className="text-xl font-bold text-white">Transaction Feed</h2>
 
-        {/* AI summary bar */}
-        <div
-          className="flex items-center gap-3 px-3 py-2.5 rounded-2xl mt-3"
-          style={{
-            background: "rgba(0,255,128,0.05)",
-            border: "1px solid rgba(0,255,128,0.15)",
-          }}
-        >
-          <div className="flex items-center justify-center rounded-full" style={{ width: "28px", height: "28px", background: "rgba(0,255,128,0.1)" }}>
-            <ShieldCheck size={14} style={{ color: "#00ff80" }} />
+        {/* Summary */}
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", borderRadius: "16px", background: "rgba(212,146,106,0.05)", border: "1px solid rgba(212,146,106,0.12)" }}>
+          <div style={{ width: "34px", height: "34px", borderRadius: "11px", background: "rgba(212,146,106,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span style={{ fontSize: "14px" }}>◉</span>
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-white">All Clear</span>
-              <div
-                className="rounded-full"
-                style={{ width: "4px", height: "4px", background: "#00ff80", boxShadow: "0 0 6px rgba(0,255,128,0.8)" }}
-              />
-              <span style={{ fontSize: "9px" }} className="text-white/40">6/6 transactions verified</span>
-            </div>
-            <div style={{ fontSize: "9px" }} className="text-white/30">Avg. AI Score: 98.3 · 0 flags · Fully compliant</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ color: IVORY, fontSize: "12px", fontWeight: 400, opacity: 0.8, marginBottom: "3px" }}>All Clear · 6 / 6 verified</div>
+            <div style={{ color: "rgba(245,240,232,0.25)", fontSize: "10px" }}>Avg score 98.3 · 0 flags · Fully compliant</div>
           </div>
-          <span className="text-xs font-bold" style={{ color: "#00ff80" }}>SAFE</span>
+          <span style={{ color: WARM, fontSize: "12px", fontWeight: 600 }}>SAFE</span>
         </div>
       </div>
 
-      {/* Transaction list */}
-      <div className="flex flex-col gap-1">
-        {Object.entries(grouped).map(([date, txs]) => (
-          <div key={date}>
-            <div className="text-xs text-white/30 font-medium mb-2 mt-2 px-1">{date}</div>
-            {txs.map((tx) => (
-              <button
-                key={tx.id}
-                onClick={() => setSelected(tx)}
-                className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl mb-1.5 text-left transition-all duration-200 active:scale-[0.99]"
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.05)",
-                }}
-              >
-                <TxIcon type={tx.type} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-semibold text-white truncate">{tx.description}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <div className="flex items-center gap-1">
-                      <CheckCircle2 size={9} style={{ color: "#00ff80" }} />
-                      <span style={{ fontSize: "9px" }} className="text-white/30">AI Verified</span>
-                    </div>
-                    <ScoreBadge score={tx.aiScore} />
-                    <span style={{ fontSize: "9px" }} className="text-white/20">{tx.time}</span>
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <div
-                    className="text-sm font-bold"
-                    style={{ color: tx.positive ? "#00ff80" : "rgba(255,255,255,0.8)" }}
-                  >
-                    {tx.amount}
-                  </div>
-                  <div style={{ fontSize: "10px" }} className="text-white/30">{tx.amountUSD}</div>
-                </div>
-                <ChevronRight size={12} className="text-white/20 flex-shrink-0" />
-              </button>
-            ))}
-          </div>
-        ))}
-      </div>
-
-      {/* Detail modal */}
-      {selected && (
-        <div
-          className="absolute inset-0 z-50 flex flex-col justify-end"
-          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
-          onClick={() => setSelected(null)}
-        >
-          <div
-            className="rounded-t-3xl p-5"
-            style={{
-              background: "linear-gradient(180deg, #0d1e30 0%, #060f1e 100%)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderBottom: "none",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Handle */}
-            <div className="flex justify-center mb-4">
-              <div className="rounded-full" style={{ width: "36px", height: "3px", background: "rgba(255,255,255,0.15)" }} />
-            </div>
-
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-base font-bold text-white">{selected.description}</div>
-                <div className="flex items-center gap-2 mt-1">
-                  <CheckCircle2 size={11} style={{ color: "#00ff80" }} />
-                  <span className="text-xs text-white/40">Neural Network Verified</span>
-                  <ScoreBadge score={selected.aiScore} />
+      {/* List */}
+      {Object.entries(grouped).map(([date, txs]) => (
+        <div key={date} style={{ marginBottom: "4px" }}>
+          <div style={{ color: "rgba(245,240,232,0.18)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", paddingTop: "8px" }}>{date}</div>
+          {txs.map((tx) => (
+            <button key={tx.id} onClick={() => setSelected(tx)} style={{
+              width: "100%", display: "flex", alignItems: "center", gap: "14px",
+              padding: "14px 4px", background: "none", border: "none", cursor: "pointer",
+              borderBottom: "1px solid rgba(245,240,232,0.04)", textAlign: "left",
+              transition: "opacity 0.15s",
+            }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ color: IVORY, fontSize: "14px", fontWeight: 200, opacity: 0.5 }}>{TYPE_GLYPH[tx.type]}</span>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ color: IVORY, fontSize: "13px", opacity: 0.8, marginBottom: "5px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tx.desc}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <ScorePill score={tx.score} />
+                  <span style={{ color: "rgba(245,240,232,0.18)", fontSize: "10px" }}>{tx.time}</span>
                 </div>
               </div>
-              <button
-                onClick={() => setSelected(null)}
-                className="flex items-center justify-center rounded-full"
-                style={{ width: "32px", height: "32px", background: "rgba(255,255,255,0.06)" }}
-              >
-                <X size={14} className="text-white/60" />
-              </button>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ color: tx.positive ? WARM : IVORY, fontSize: "13px", opacity: tx.positive ? 1 : 0.7, marginBottom: "3px" }}>{tx.amount}</div>
+                <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px" }}>{tx.sub}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      ))}
+
+      {/* Detail sheet */}
+      {selected && (
+        <div
+          onClick={() => setSelected(null)}
+          style={{
+            position: "absolute", inset: 0, zIndex: 50,
+            display: "flex", flexDirection: "column", justifyContent: "flex-end",
+            background: "rgba(0,0,0,0.6)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              borderRadius: "28px 28px 44px 44px",
+              padding: "24px 24px 32px",
+              background: "linear-gradient(180deg, #181410 0%, #0f0c0a 100%)",
+              border: "1px solid rgba(245,240,232,0.07)",
+              borderBottom: "none",
+            }}
+          >
+            {/* Handle */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+              <div style={{ width: "36px", height: "3px", borderRadius: "2px", background: "rgba(245,240,232,0.12)" }} />
+            </div>
+
+            {/* Title */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+              <div>
+                <div style={{ color: IVORY, fontSize: "16px", fontWeight: 300, opacity: 0.9, marginBottom: "6px" }}>{selected.desc}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ color: "rgba(245,240,232,0.25)", fontSize: "11px" }}>AI Verified</span>
+                  <ScorePill score={selected.score} />
+                </div>
+              </div>
+              <button onClick={() => setSelected(null)} style={{ width: "32px", height: "32px", borderRadius: "10px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, cursor: "pointer", color: IVORY, fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
             </div>
 
             {/* Amount */}
-            <div
-              className="rounded-2xl p-4 mb-4 text-center"
-              style={{ background: "rgba(0,255,128,0.05)", border: "1px solid rgba(0,255,128,0.12)" }}
-            >
-              <div
-                className="text-2xl font-bold mb-0.5"
-                style={{ color: selected.positive ? "#00ff80" : "rgba(255,255,255,0.9)" }}
-              >
-                {selected.amount}
-              </div>
-              <div className="text-sm text-white/40">{selected.amountUSD}</div>
+            <div style={{ padding: "16px 20px", borderRadius: "16px", background: "rgba(212,146,106,0.05)", border: "1px solid rgba(212,146,106,0.12)", textAlign: "center", marginBottom: "20px" }}>
+              <div style={{ color: selected.positive ? WARM : IVORY, fontSize: "28px", fontWeight: 200, letterSpacing: "-1px", marginBottom: "4px" }}>{selected.amount}</div>
+              <div style={{ color: "rgba(245,240,232,0.25)", fontSize: "12px" }}>{selected.sub}</div>
             </div>
 
-            {/* Details grid */}
-            <div className="flex flex-col gap-2.5">
-              {[
-                { label: "Transaction ID", value: `${selected.txid.slice(0, 20)}...`, icon: Hash, mono: true },
-                { label: "Network", value: selected.network, icon: Globe, mono: false },
-                { label: "Gas / Fee", value: selected.gasFee, icon: Zap, mono: false },
-                { label: "Legal Node", value: selected.legalNode, icon: ShieldCheck, mono: false },
-                { label: "Time", value: `${selected.date} · ${selected.time}`, icon: Clock, mono: false },
-                { label: "Counterparty", value: selected.counterparty, icon: ArrowLeftRight, mono: true },
-              ].map(({ label, value, icon: Icon, mono }) => (
-                <div key={label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Icon size={12} className="text-white/30" />
-                    <span className="text-xs text-white/40">{label}</span>
-                  </div>
-                  <span
-                    className="text-xs font-medium text-white text-right"
-                    style={{ fontFamily: mono ? "monospace" : "inherit", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                  >
-                    {value}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {/* Details */}
+            <DetailRow label="TXID"    value={selected.txid}    />
+            <DetailRow label="Network" value={selected.network} />
+            <DetailRow label="Fee"     value={selected.fee}     />
+            <DetailRow label="Node"    value={selected.node}    hi />
+            <DetailRow label="Time"    value={`${selected.date} · ${selected.time}`} />
+            <DetailRow label="Party"   value={selected.party}   />
 
-            {/* Neural verdict */}
-            <div
-              className="flex items-center gap-3 px-4 py-3 rounded-2xl mt-4"
-              style={{ background: "rgba(0,255,128,0.06)", border: "1px solid rgba(0,255,128,0.2)" }}
-            >
-              <Cpu size={16} style={{ color: "#00ff80" }} />
+            {/* Verdict */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderRadius: "14px", background: "rgba(212,146,106,0.06)", border: "1px solid rgba(212,146,106,0.14)", marginTop: "16px" }}>
+              <span style={{ fontSize: "18px" }}>◉</span>
               <div>
-                <div className="text-xs font-bold" style={{ color: "#00ff80" }}>
-                  Neural AML Verdict: LEGAL & SAFE
-                </div>
-                <div style={{ fontSize: "9px" }} className="text-white/40 mt-0.5">
-                  Block verified · No sanctions match · Score {selected.aiScore}/100 · Decree No. 19 compliant
-                </div>
+                <div style={{ color: WARM, fontSize: "12px", fontWeight: 500, marginBottom: "3px" }}>Neural AML Verdict: LEGAL & SAFE</div>
+                <div style={{ color: "rgba(245,240,232,0.22)", fontSize: "10px" }}>No sanctions match · Score {selected.score}/100 · Decree No. 19 compliant</div>
               </div>
             </div>
           </div>

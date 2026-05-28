@@ -1,281 +1,184 @@
 import { useState } from "react";
-import {
-  ArrowDown, ShieldCheck, Zap, Globe, AlertCircle,
-  CheckCircle2, ChevronDown, ArrowRight, Landmark, Lock
-} from "lucide-react";
 
-const currencies = ["BYN", "RUB", "USD", "EUR"];
+const IVORY = "#F5F0E8";
+const IVORY_DIM = "rgba(245,240,232,0.05)";
+const IVORY_BORDER = "rgba(245,240,232,0.08)";
+const WARM = "#D4926A";
+
 const targets = ["CNY", "AED", "TRY", "INR", "USD", "EUR", "KZT"];
 
-const routingSteps = [
-  { from: "RUB", to: "USDT", via: "PBT Exchange", time: "~30s", fee: "0.1%" },
-  { from: "USDT", to: "CNY", via: "Legal Broker Node", time: "~2min", fee: "0.15%" },
-];
+const RATES: Record<string, number> = {
+  CNY: 0.0809, AED: 0.0277, TRY: 0.882,
+  INR: 0.847,  USD: 0.011,  EUR: 0.0101, KZT: 4.98,
+};
+
+function Row({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid rgba(245,240,232,0.04)" }}>
+      <span style={{ color: "rgba(245,240,232,0.3)", fontSize: "12px" }}>{label}</span>
+      <span style={{ color: highlight ? WARM : IVORY, fontSize: "12px", fontWeight: highlight ? 500 : 400, opacity: highlight ? 1 : 0.8 }}>{value}</span>
+    </div>
+  );
+}
 
 export default function BridgeScreen() {
-  const [sendAmount, setSendAmount] = useState("150,000");
-  const [fromCurr, setFromCurr] = useState("RUB");
-  const [toCurr, setToCurr] = useState("CNY");
-  const [isExecuting, setIsExecuting] = useState(false);
-  const [executed, setExecuted] = useState(false);
+  const [amount, setAmount] = useState("150000");
+  const [from] = useState("RUB");
+  const [to, setTo] = useState("CNY");
+  const [state, setState] = useState<"idle" | "loading" | "done">("idle");
 
-  const rate = toCurr === "CNY" ? 0.0809 :
-               toCurr === "AED" ? 0.0277 :
-               toCurr === "TRY" ? 0.882  :
-               toCurr === "INR" ? 0.847  : 0.011;
+  const num = parseFloat(amount.replace(/\D/g, "")) || 0;
+  const rate = RATES[to] ?? 0.01;
+  const received = (num * rate).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  const fee = (num * 0.0025).toFixed(0);
 
-  const numeric = parseFloat(sendAmount.replace(/,/g, "")) || 0;
-  const receiveAmount = (numeric * rate).toLocaleString("en-US", { maximumFractionDigits: 2 });
-
-  const handleExecute = () => {
-    setIsExecuting(true);
-    setTimeout(() => {
-      setIsExecuting(false);
-      setExecuted(true);
-      setTimeout(() => setExecuted(false), 3000);
-    }, 2200);
+  const execute = () => {
+    setState("loading");
+    setTimeout(() => { setState("done"); setTimeout(() => setState("idle"), 3000); }, 2000);
   };
 
   return (
-    <div className="px-4 pt-2 pb-4">
+    <div style={{ padding: "20px 22px 20px" }}>
+
       {/* Header */}
-      <div className="mb-5">
-        <div className="flex items-center gap-2 mb-1">
-          <Globe size={16} style={{ color: "#818cf8" }} />
-          <span className="text-xs text-white/40 uppercase tracking-wider font-medium">B2B Transborder Bridge</span>
+      <div style={{ marginBottom: "32px" }}>
+        <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "10px" }}>
+          Decree No. 19 · SWIFT-Free
         </div>
-        <h2 className="text-xl font-bold text-white">Legal SWIFT-Free</h2>
-        <h2 className="text-xl font-bold" style={{ color: "#818cf8" }}>Transfer Bridge</h2>
-        <p className="text-xs text-white/40 mt-1">Compliant with Decree No. 19 · Instant routing</p>
+        <div style={{ fontSize: "28px", fontWeight: 200, color: IVORY, letterSpacing: "-1px", lineHeight: 1.2 }}>
+          Transborder<br />
+          <span style={{ color: WARM }}>Bridge</span>
+        </div>
       </div>
 
-      {/* AI Risk Badge */}
-      <div
-        className="flex items-center gap-3 px-4 py-3 rounded-2xl mb-5"
-        style={{
-          background: "rgba(0,255,128,0.06)",
-          border: "1px solid rgba(0,255,128,0.2)",
-        }}
-      >
-        <div
-          className="flex items-center justify-center rounded-full pulse-dot"
-          style={{
-            width: "36px", height: "36px",
-            background: "rgba(0,255,128,0.12)",
-          }}
-        >
-          <ShieldCheck size={18} style={{ color: "#00ff80" }} />
+      {/* Sanction check */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: "14px",
+        padding: "14px 16px", borderRadius: "16px", marginBottom: "28px",
+        background: "rgba(212,146,106,0.06)", border: "1px solid rgba(212,146,106,0.14)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "12px", background: "rgba(212,146,106,0.1)", flexShrink: 0 }}>
+          <span style={{ fontSize: "16px" }}>◉</span>
         </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-white">AI Risk & Sanction Check</span>
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: "rgba(0,255,128,0.15)" }}>
-              <CheckCircle2 size={10} style={{ color: "#00ff80" }} />
-              <span style={{ fontSize: "9px", color: "#00ff80", fontWeight: 700 }}>100% CLEAN</span>
+        <div>
+          <div style={{ color: IVORY, fontSize: "13px", fontWeight: 400, opacity: 0.85, marginBottom: "3px" }}>AI Risk & Sanction Check</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: WARM, boxShadow: `0 0 6px ${WARM}` }} />
+            <span style={{ color: "rgba(212,146,106,0.7)", fontSize: "10px", letterSpacing: "0.08em" }}>100% CLEAN · OFAC · EU · UN verified</span>
+          </div>
+        </div>
+        <div style={{ marginLeft: "auto", padding: "4px 10px", borderRadius: "8px", background: "rgba(212,146,106,0.1)" }}>
+          <span style={{ color: WARM, fontSize: "10px", fontWeight: 700 }}>SAFE</span>
+        </div>
+      </div>
+
+      {/* Form */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
+        {/* Send */}
+        <div style={{ padding: "18px 20px", borderRadius: "18px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}` }}>
+          <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px" }}>You Send</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              style={{
+                flex: 1, background: "none", border: "none", outline: "none",
+                fontSize: "28px", fontWeight: 200, color: IVORY, letterSpacing: "-1px",
+              }}
+              placeholder="0"
+            />
+            <div style={{ padding: "6px 14px", borderRadius: "10px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}` }}>
+              <span style={{ color: IVORY, fontSize: "13px", fontWeight: 500, opacity: 0.7 }}>{from}</span>
             </div>
           </div>
-          <div className="text-xs text-white/40 mt-0.5">OFAC · EU · UN lists scanned · Neural verified</div>
-        </div>
-      </div>
-
-      {/* Transfer Form */}
-      <div
-        className="rounded-3xl p-4 mb-4"
-        style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.07)",
-        }}
-      >
-        <div className="text-xs text-white/40 font-medium mb-3">Transfer Details</div>
-
-        {/* Send field */}
-        <div
-          className="rounded-2xl p-3 mb-3"
-          style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}
-        >
-          <div className="text-xs text-white/30 mb-1.5">You Send</div>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={sendAmount}
-              onChange={(e) => setSendAmount(e.target.value)}
-              className="flex-1 bg-transparent text-xl font-bold text-white outline-none"
-              placeholder="0.00"
-            />
-            <button
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl"
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-            >
-              <span className="text-sm font-semibold text-white">{fromCurr}</span>
-              <ChevronDown size={13} className="text-white/40" />
-            </button>
-          </div>
-          <div className="text-xs text-white/30 mt-1">
-            ≈ ${(numeric * 0.011).toLocaleString("en-US", { maximumFractionDigits: 2 })} USD
-          </div>
+          <div style={{ color: "rgba(245,240,232,0.18)", fontSize: "11px", marginTop: "6px" }}>≈ ${(num * 0.011).toFixed(0)} USD</div>
         </div>
 
         {/* Arrow */}
-        <div className="flex justify-center my-2">
-          <div
-            className="flex items-center justify-center rounded-full"
-            style={{
-              width: "32px", height: "32px",
-              background: "rgba(129,140,248,0.15)",
-              border: "1px solid rgba(129,140,248,0.3)",
-            }}
-          >
-            <ArrowDown size={14} style={{ color: "#818cf8" }} />
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "30px", height: "30px", borderRadius: "10px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ color: "rgba(245,240,232,0.4)", fontSize: "14px", fontWeight: 200 }}>↓</span>
           </div>
         </div>
 
-        {/* Receive field */}
-        <div
-          className="rounded-2xl p-3"
-          style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}
-        >
-          <div className="text-xs text-white/30 mb-1.5">They Receive</div>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 text-xl font-bold" style={{ color: "#00ff80" }}>
-              {receiveAmount}
-            </div>
-            <div className="relative">
+        {/* Receive */}
+        <div style={{ padding: "18px 20px", borderRadius: "18px", background: IVORY_DIM, border: `1px solid rgba(212,146,106,0.15)` }}>
+          <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px" }}>They Receive</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ flex: 1, fontSize: "28px", fontWeight: 200, color: WARM, letterSpacing: "-1px" }}>{received}</div>
+            <div style={{ position: "relative" }}>
               <select
-                value={toCurr}
-                onChange={(e) => setToCurr(e.target.value)}
-                className="appearance-none flex items-center gap-1.5 px-3 py-2 pr-7 rounded-xl text-sm font-semibold text-white outline-none cursor-pointer"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
                 style={{
-                  background: "rgba(129,140,248,0.12)",
-                  border: "1px solid rgba(129,140,248,0.25)",
-                  color: "white",
+                  padding: "6px 28px 6px 14px", borderRadius: "10px",
+                  background: "rgba(212,146,106,0.08)", border: "1px solid rgba(212,146,106,0.2)",
+                  color: WARM, fontSize: "13px", fontWeight: 500, cursor: "pointer", outline: "none",
                 }}
               >
-                {targets.map((t) => <option key={t} value={t} style={{ background: "#040c18" }}>{t}</option>)}
+                {targets.map((t) => <option key={t} value={t} style={{ background: "#0a0908" }}>{t}</option>)}
               </select>
-              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
             </div>
           </div>
-          <div className="text-xs text-white/30 mt-1">Rate: 1 {fromCurr} = {rate} {toCurr}</div>
+          <div style={{ color: "rgba(245,240,232,0.18)", fontSize: "11px", marginTop: "6px" }}>1 {from} = {rate} {to}</div>
         </div>
       </div>
 
-      {/* Routing Path */}
-      <div
-        className="rounded-2xl p-4 mb-4"
-        style={{
-          background: "rgba(255,255,255,0.02)",
-          border: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <Zap size={12} style={{ color: "#fbbf24" }} />
-          <span className="text-xs text-white/40 font-medium uppercase tracking-wider">Live Routing Path</span>
-        </div>
+      {/* Route card */}
+      <div style={{ padding: "18px 20px", borderRadius: "18px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, marginBottom: "20px" }}>
+        <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "14px" }}>Live Routing Path</div>
 
-        <div className="flex items-center gap-1 flex-wrap">
-          <div
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-          >
-            <Landmark size={11} className="text-white/60" />
-            <span className="text-xs font-semibold text-white">{fromCurr}</span>
-          </div>
-
-          {routingSteps.map((step, i) => (
-            <div key={i} className="flex items-center gap-1">
-              <ArrowRight size={12} className="text-white/20" />
-              <div
-                className="flex flex-col items-center px-2.5 py-1.5 rounded-xl"
-                style={{
-                  background: i === 0 ? "rgba(129,140,248,0.1)" : "rgba(0,255,128,0.08)",
-                  border: `1px solid ${i === 0 ? "rgba(129,140,248,0.25)" : "rgba(0,255,128,0.2)"}`,
-                }}
-              >
-                <span className="text-xs font-bold" style={{ color: i === 0 ? "#818cf8" : "#00ff80" }}>
-                  {step.to}
-                </span>
-                <span style={{ fontSize: "8px" }} className="text-white/30">{step.time}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
+          {[
+            { label: from, sub: "Fiat" },
+            { label: "→", sub: null },
+            { label: "USDT", sub: "~30s" },
+            { label: "→", sub: null },
+            { label: to, sub: "~2m" },
+          ].map((s, i) => s.sub === null
+            ? <span key={i} style={{ color: "rgba(245,240,232,0.15)", fontSize: "14px" }}>{s.label}</span>
+            : (
+              <div key={i} style={{ padding: "6px 12px", borderRadius: "10px", background: s.label === to ? "rgba(212,146,106,0.1)" : IVORY_DIM, border: `1px solid ${s.label === to ? "rgba(212,146,106,0.2)" : IVORY_BORDER}` }}>
+                <div style={{ color: s.label === to ? WARM : IVORY, fontSize: "12px", fontWeight: 500, opacity: s.label === to ? 1 : 0.7 }}>{s.label}</div>
+                <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "9px", marginTop: "1px" }}>{s.sub}</div>
               </div>
-            </div>
-          ))}
-
-          <ArrowRight size={12} className="text-white/20" />
-          <div
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl"
-            style={{ background: "rgba(0,255,128,0.1)", border: "1px solid rgba(0,255,128,0.3)" }}
-          >
-            <Globe size={11} style={{ color: "#00ff80" }} />
-            <span className="text-xs font-semibold" style={{ color: "#00ff80" }}>{toCurr}</span>
-          </div>
+            )
+          )}
         </div>
 
-        <div className="flex items-center gap-3 mt-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-          <div className="flex-1">
-            <div className="text-xs text-white/30">Total Fee</div>
-            <div className="text-sm font-semibold text-white">0.25% · ~{(numeric * 0.0025).toFixed(0)} {fromCurr}</div>
-          </div>
-          <div className="flex-1">
-            <div className="text-xs text-white/30">Est. Time</div>
-            <div className="text-sm font-semibold text-white">~2m 30s</div>
-          </div>
-          <div className="flex-1">
-            <div className="text-xs text-white/30">Legal Node</div>
-            <div className="flex items-center gap-1">
-              <CheckCircle2 size={10} style={{ color: "#00ff80" }} />
-              <span className="text-sm font-semibold" style={{ color: "#00ff80" }}>Verified</span>
-            </div>
-          </div>
-        </div>
+        <Row label="Total Fee" value={`0.25% · ~${fee} ${from}`} />
+        <Row label="Est. Time" value="~2m 30s" />
+        <Row label="Legal Node" value="BY-PBT-012 · Verified" highlight />
+        <Row label="Protocol" value="PBT Broker Layer v3" />
       </div>
 
-      {/* Compliance Notice */}
-      <div
-        className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl mb-4"
-        style={{ background: "rgba(129,140,248,0.06)", border: "1px solid rgba(129,140,248,0.15)" }}
-      >
-        <Lock size={12} style={{ color: "#818cf8", marginTop: "2px" }} />
-        <p style={{ fontSize: "10px" }} className="text-white/40 leading-relaxed">
-          This transfer complies with Decree No. 19 (BY) and Federal Law No. 259-FZ (RU).
-          All funds routed through licensed PBT brokers with full KYC/AML verification.
+      {/* Notice */}
+      <div style={{ padding: "12px 16px", borderRadius: "14px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, marginBottom: "20px" }}>
+        <p style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", lineHeight: 1.7 }}>
+          Compliant with Decree No. 19 (BY) · Federal Law No. 259-FZ (RU). All routing through licensed PBT brokers with full KYC/AML.
         </p>
       </div>
 
-      {/* Execute button */}
+      {/* CTA */}
       <button
-        onClick={handleExecute}
-        disabled={isExecuting || executed}
-        className="w-full py-4 rounded-2xl font-bold text-sm transition-all duration-300 active:scale-[0.98]"
+        onClick={execute}
+        disabled={state !== "idle"}
         style={{
-          background: executed
-            ? "rgba(0,255,128,0.15)"
-            : isExecuting
-            ? "rgba(129,140,248,0.2)"
-            : "linear-gradient(135deg, #00ff80, #00cc66)",
-          color: executed ? "#00ff80" : isExecuting ? "#818cf8" : "#020b14",
-          border: executed
-            ? "1px solid rgba(0,255,128,0.4)"
-            : isExecuting
-            ? "1px solid rgba(129,140,248,0.3)"
-            : "none",
-          boxShadow: !isExecuting && !executed ? "0 0 30px rgba(0,255,128,0.3)" : "none",
+          width: "100%", padding: "18px", borderRadius: "18px",
+          fontSize: "13px", fontWeight: 500, letterSpacing: "0.06em",
+          cursor: state === "idle" ? "pointer" : "default",
+          border: "none", transition: "all 0.3s",
+          background: state === "done"
+            ? "rgba(212,146,106,0.1)"
+            : state === "loading"
+            ? "rgba(245,240,232,0.04)"
+            : "linear-gradient(135deg, rgba(212,146,106,0.9), rgba(190,116,82,0.9))",
+          color: state === "idle" ? "#0a0908" : WARM,
+          boxShadow: state === "idle" ? "0 0 30px rgba(212,146,106,0.2)" : "none",
         }}
       >
-        {executed ? (
-          <span className="flex items-center justify-center gap-2">
-            <CheckCircle2 size={16} />
-            Transfer Initiated Successfully
-          </span>
-        ) : isExecuting ? (
-          <span className="flex items-center justify-center gap-2">
-            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="rgba(129,140,248,0.3)" strokeWidth="3"/>
-              <path d="M12 2a10 10 0 0 1 10 10" stroke="#818cf8" strokeWidth="3" strokeLinecap="round"/>
-            </svg>
-            Processing Legal Transfer...
-          </span>
-        ) : (
-          "Execute Legal Transborder Transfer"
-        )}
+        {state === "done" ? "✓  Transfer Initiated" : state === "loading" ? "Processing…" : "Execute Legal Transfer"}
       </button>
     </div>
   );

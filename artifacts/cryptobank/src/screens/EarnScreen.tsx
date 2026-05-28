@@ -1,334 +1,207 @@
 import { useState } from "react";
-import {
-  TrendingUp, Bitcoin, Coins, Lock, ChevronRight,
-  Calculator, Percent, Clock, ShieldCheck, Zap
-} from "lucide-react";
 
-const depositProducts = [
-  {
-    asset: "BTC", name: "Bitcoin Deposit",
-    apy: "8.0%", minAmount: "0.01 BTC", term: "90 days",
-    color: "#f7931a", bg: "#f7931a18", border: "#f7931a30",
-    badge: "Highest Yield",
-  },
-  {
-    asset: "USDT", name: "Stablecoin Deposit",
-    apy: "6.5%", minAmount: "500 USDT", term: "30 days",
-    color: "#26a17b", bg: "#26a17b18", border: "#26a17b30",
-    badge: "Most Popular",
-  },
-  {
-    asset: "ETH", name: "Ethereum Deposit",
-    apy: "5.2%", minAmount: "0.1 ETH", term: "60 days",
-    color: "#627eea", bg: "#627eea18", border: "#627eea30",
-    badge: null,
-  },
+const IVORY = "#F5F0E8";
+const IVORY_DIM = "rgba(245,240,232,0.05)";
+const IVORY_BORDER = "rgba(245,240,232,0.08)";
+const WARM = "#D4926A";
+
+const products = [
+  { asset: "BTC",  apy: 8.0, term: "90 days", min: "0.01 BTC",  tag: "Highest Yield" },
+  { asset: "USDT", apy: 6.5, term: "30 days", min: "500 USDT",  tag: "Most Popular"  },
+  { asset: "ETH",  apy: 5.2, term: "60 days", min: "0.1 ETH",   tag: null            },
 ];
 
-export default function EarnScreen() {
-  const [depositAmount, setDepositAmount] = useState(5000);
-  const [selectedAsset, setSelectedAsset] = useState("BTC");
-  const [loanCollateral, setLoanCollateral] = useState(0.5);
-  const [activeTab, setActiveTab] = useState<"deposit" | "loan">("deposit");
+function Label({ text }: { text: string }) {
+  return (
+    <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "14px" }}>
+      {text}
+    </div>
+  );
+}
 
-  const selectedProduct = depositProducts.find(p => p.asset === selectedAsset) || depositProducts[0];
-  const apyNum = parseFloat(selectedProduct.apy) / 100;
-  const monthlyEarnings = (depositAmount * apyNum / 12).toFixed(2);
-  const annualEarnings = (depositAmount * apyNum).toFixed(2);
+export default function EarnScreen() {
+  const [tab, setTab] = useState<"deposit" | "loan">("deposit");
+  const [sel, setSel] = useState("BTC");
+  const [depositAmt, setDepositAmt] = useState(5000);
+  const [btcCollateral, setBtcCollateral] = useState(0.5);
+
+  const product = products.find((p) => p.asset === sel) || products[0];
+  const monthly = (depositAmt * (product.apy / 100) / 12).toFixed(2);
+  const annual  = (depositAmt * (product.apy / 100)).toFixed(2);
 
   const btcPrice = 47248;
-  const collateralValue = loanCollateral * btcPrice;
-  const maxLoan = collateralValue * 0.65;
-  const ltv = 65;
+  const collVal  = btcCollateral * btcPrice;
+  const maxLoan  = collVal * 0.65;
 
   return (
-    <div className="px-4 pt-2 pb-4">
+    <div style={{ padding: "20px 22px 20px" }}>
+
       {/* Header */}
-      <div className="mb-5">
-        <div className="flex items-center gap-2 mb-1">
-          <TrendingUp size={16} style={{ color: "#fbbf24" }} />
-          <span className="text-xs text-white/40 uppercase tracking-wider font-medium">Decree No. 19 · Compliant</span>
+      <div style={{ marginBottom: "28px" }}>
+        <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "10px" }}>Decree No. 19 · Compliant</div>
+        <div style={{ fontSize: "28px", fontWeight: 200, color: IVORY, letterSpacing: "-1px", lineHeight: 1.2 }}>
+          Earn &<br /><span style={{ color: WARM }}>Deposits</span>
         </div>
-        <h2 className="text-xl font-bold text-white">Earn & Deposits</h2>
-        <p className="text-xs text-white/40 mt-0.5">Crypto-backed savings under full legal framework</p>
       </div>
 
-      {/* Toggle tabs */}
-      <div
-        className="flex rounded-2xl p-1 mb-5"
-        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
-      >
-        {(["deposit", "loan"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-            style={{
-              background: activeTab === tab
-                ? "linear-gradient(135deg, rgba(0,255,128,0.15), rgba(0,204,102,0.1))"
-                : "transparent",
-              color: activeTab === tab ? "#00ff80" : "rgba(255,255,255,0.35)",
-              border: activeTab === tab ? "1px solid rgba(0,255,128,0.2)" : "1px solid transparent",
-            }}
-          >
-            {tab === "deposit" ? "Crypto Deposit" : "Crypto Loan"}
+      {/* Tab toggle */}
+      <div style={{ display: "flex", borderRadius: "16px", padding: "4px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, marginBottom: "28px" }}>
+        {(["deposit", "loan"] as const).map((t) => (
+          <button key={t} onClick={() => setTab(t)} style={{
+            flex: 1, padding: "10px", borderRadius: "12px",
+            fontSize: "12px", fontWeight: tab === t ? 500 : 400,
+            letterSpacing: "0.04em", cursor: "pointer", border: "none",
+            background: tab === t ? "rgba(212,146,106,0.1)" : "transparent",
+            color: tab === t ? WARM : "rgba(245,240,232,0.25)",
+            transition: "all 0.2s",
+          }}>
+            {t === "deposit" ? "Crypto Deposit" : "Crypto Loan"}
           </button>
         ))}
       </div>
 
-      {activeTab === "deposit" && (
+      {tab === "deposit" && (
         <>
-          {/* Products list */}
-          <div className="flex flex-col gap-3 mb-5">
-            {depositProducts.map((product) => (
-              <button
-                key={product.asset}
-                onClick={() => setSelectedAsset(product.asset)}
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all duration-200 active:scale-[0.99]"
-                style={{
-                  background: selectedAsset === product.asset
-                    ? `${product.bg}`
-                    : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${selectedAsset === product.asset ? product.border : "rgba(255,255,255,0.06)"}`,
-                  boxShadow: selectedAsset === product.asset ? `0 0 20px ${product.bg}` : "none",
-                }}
-              >
-                <div
-                  className="flex items-center justify-center rounded-full text-sm font-bold"
-                  style={{
-                    width: "40px", height: "40px",
-                    background: product.bg,
-                    border: `1px solid ${product.border}`,
-                    color: product.color,
-                  }}
-                >
-                  {product.asset.slice(0, 1)}
+          <Label text="Products" />
+
+          {/* Product list */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "28px" }}>
+            {products.map((p) => (
+              <button key={p.asset} onClick={() => setSel(p.asset)} style={{
+                display: "flex", alignItems: "center", gap: "14px",
+                padding: "16px 18px", borderRadius: "18px", cursor: "pointer",
+                background: sel === p.asset ? "rgba(212,146,106,0.07)" : IVORY_DIM,
+                border: `1px solid ${sel === p.asset ? "rgba(212,146,106,0.2)" : IVORY_BORDER}`,
+                transition: "all 0.2s",
+                textAlign: "left",
+              }}>
+                <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ color: IVORY, fontSize: "12px", fontWeight: 600, opacity: 0.6 }}>{p.asset.slice(0, 1)}</span>
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-white">{product.name}</span>
-                    {product.badge && (
-                      <span
-                        className="px-1.5 py-0.5 rounded-full"
-                        style={{
-                          fontSize: "8px", fontWeight: 700,
-                          background: "rgba(0,255,128,0.15)",
-                          color: "#00ff80",
-                        }}
-                      >
-                        {product.badge}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ color: IVORY, fontSize: "13px", fontWeight: 400, opacity: 0.85 }}>{p.asset} Deposit</span>
+                    {p.tag && (
+                      <span style={{ padding: "2px 8px", borderRadius: "6px", background: "rgba(212,146,106,0.1)", color: WARM, fontSize: "9px", fontWeight: 600, letterSpacing: "0.05em" }}>
+                        {p.tag}
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <span className="text-xs text-white/40">Min: {product.minAmount}</span>
-                    <span className="text-xs text-white/40">Term: {product.term}</span>
-                  </div>
+                  <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", marginTop: "3px" }}>Min {p.min} · {p.term}</div>
                 </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold" style={{ color: product.color }}>{product.apy}</div>
-                  <div className="text-xs text-white/30">APY</div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ color: WARM, fontSize: "20px", fontWeight: 200, letterSpacing: "-0.5px" }}>{p.apy}%</div>
+                  <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "9px", letterSpacing: "0.1em" }}>APY</div>
                 </div>
               </button>
             ))}
           </div>
 
+          <Label text="Earnings Calculator" />
+
           {/* Calculator */}
-          <div
-            className="rounded-3xl p-4"
-            style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.07)",
-            }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Calculator size={14} style={{ color: "#00ff80" }} />
-              <span className="text-sm font-semibold text-white">Earnings Calculator</span>
+          <div style={{ padding: "20px", borderRadius: "20px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "14px" }}>
+              <span style={{ color: "rgba(245,240,232,0.3)", fontSize: "12px" }}>Deposit Amount</span>
+              <span style={{ color: IVORY, fontSize: "18px", fontWeight: 200 }}>${depositAmt.toLocaleString()}</span>
             </div>
 
-            <div className="mb-4">
-              <div className="flex justify-between mb-2">
-                <span className="text-xs text-white/40">Deposit Amount (USDT)</span>
-                <span className="text-sm font-bold" style={{ color: "#00ff80" }}>
-                  ${depositAmount.toLocaleString()}
-                </span>
-              </div>
-              <input
-                type="range"
-                min={100}
-                max={50000}
-                step={100}
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(Number(e.target.value))}
-                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, #00ff80 ${(depositAmount / 50000) * 100}%, rgba(255,255,255,0.1) ${(depositAmount / 50000) * 100}%)`,
-                  outline: "none",
-                }}
-              />
-              <div className="flex justify-between mt-1">
-                <span style={{ fontSize: "9px" }} className="text-white/20">$100</span>
-                <span style={{ fontSize: "9px" }} className="text-white/20">$50,000</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div
-                className="rounded-2xl p-3 text-center"
-                style={{ background: "rgba(0,255,128,0.06)", border: "1px solid rgba(0,255,128,0.15)" }}
-              >
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Clock size={10} style={{ color: "#00ff80" }} />
-                  <span style={{ fontSize: "9px" }} className="text-white/40">Monthly</span>
-                </div>
-                <div className="text-lg font-bold" style={{ color: "#00ff80" }}>
-                  ${monthlyEarnings}
-                </div>
-                <div style={{ fontSize: "9px" }} className="text-white/30">est. earnings</div>
-              </div>
-              <div
-                className="rounded-2xl p-3 text-center"
-                style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)" }}
-              >
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <Percent size={10} style={{ color: "#fbbf24" }} />
-                  <span style={{ fontSize: "9px" }} className="text-white/40">Annual</span>
-                </div>
-                <div className="text-lg font-bold" style={{ color: "#fbbf24" }}>
-                  ${annualEarnings}
-                </div>
-                <div style={{ fontSize: "9px" }} className="text-white/30">est. earnings</div>
-              </div>
-            </div>
-
-            <button
-              className="w-full mt-4 py-3.5 rounded-2xl font-bold text-sm transition-all duration-200 active:scale-[0.98]"
+            <input
+              type="range" min={100} max={50000} step={100}
+              value={depositAmt} onChange={(e) => setDepositAmt(+e.target.value)}
               style={{
-                background: "linear-gradient(135deg, #00ff80, #00cc66)",
-                color: "#020b14",
-                boxShadow: "0 0 20px rgba(0,255,128,0.25)",
+                width: "100%", height: "2px", borderRadius: "1px", border: "none",
+                background: `linear-gradient(to right, ${WARM} ${(depositAmt / 50000) * 100}%, rgba(245,240,232,0.08) ${(depositAmt / 50000) * 100}%)`,
+                marginBottom: "18px",
               }}
-            >
-              Open {selectedProduct.apy} APY Deposit
+            />
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "18px" }}>
+              {[
+                { label: "Monthly", value: `$${monthly}` },
+                { label: "Annual",  value: `$${annual}`  },
+              ].map((item) => (
+                <div key={item.label} style={{ padding: "14px", borderRadius: "14px", background: "rgba(212,146,106,0.06)", border: "1px solid rgba(212,146,106,0.12)", textAlign: "center" }}>
+                  <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px" }}>{item.label}</div>
+                  <div style={{ color: WARM, fontSize: "22px", fontWeight: 200, letterSpacing: "-0.5px" }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <button style={{
+              width: "100%", padding: "16px", borderRadius: "14px",
+              background: "linear-gradient(135deg, rgba(212,146,106,0.85), rgba(190,116,82,0.85))",
+              border: "none", color: "#0a0908", fontSize: "13px", fontWeight: 500,
+              letterSpacing: "0.05em", cursor: "pointer",
+              boxShadow: "0 0 24px rgba(212,146,106,0.15)",
+            }}>
+              Open {product.apy}% APY Deposit
             </button>
           </div>
         </>
       )}
 
-      {activeTab === "loan" && (
+      {tab === "loan" && (
         <>
-          {/* Loan info */}
-          <div
-            className="rounded-2xl px-4 py-3 mb-4 flex items-center gap-3"
-            style={{ background: "rgba(247,147,26,0.08)", border: "1px solid rgba(247,147,26,0.2)" }}
-          >
-            <Bitcoin size={18} style={{ color: "#f7931a" }} />
-            <div>
-              <div className="text-sm font-semibold text-white">Bitcoin-Backed Loans</div>
-              <div className="text-xs text-white/40">Borrow fiat or stablecoins using BTC as collateral</div>
+          <Label text="BTC-Backed Loan" />
+
+          <div style={{ padding: "20px", borderRadius: "20px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "14px" }}>
+              <span style={{ color: "rgba(245,240,232,0.3)", fontSize: "12px" }}>BTC Collateral</span>
+              <span style={{ color: IVORY, fontSize: "18px", fontWeight: 200 }}>{btcCollateral} BTC</span>
             </div>
-          </div>
+            <input
+              type="range" min={0.01} max={5} step={0.01}
+              value={btcCollateral} onChange={(e) => setBtcCollateral(+e.target.value)}
+              style={{
+                width: "100%", height: "2px", borderRadius: "1px", border: "none",
+                background: `linear-gradient(to right, ${WARM} ${(btcCollateral / 5) * 100}%, rgba(245,240,232,0.08) ${(btcCollateral / 5) * 100}%)`,
+                marginBottom: "20px",
+              }}
+            />
 
-          {/* Collateral slider */}
-          <div
-            className="rounded-3xl p-4 mb-4"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
-          >
-            <div className="text-sm font-semibold text-white mb-4">Collateral Configuration</div>
-
-            <div className="mb-5">
-              <div className="flex justify-between mb-2">
-                <span className="text-xs text-white/40">BTC Collateral</span>
-                <span className="text-sm font-bold" style={{ color: "#f7931a" }}>
-                  {loanCollateral} BTC
-                </span>
+            {/* LTV */}
+            <div style={{ marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ color: "rgba(245,240,232,0.3)", fontSize: "12px" }}>Loan-to-Value</span>
+                <span style={{ color: WARM, fontSize: "12px", fontWeight: 500 }}>65%</span>
               </div>
-              <input
-                type="range"
-                min={0.01}
-                max={5}
-                step={0.01}
-                value={loanCollateral}
-                onChange={(e) => setLoanCollateral(Number(e.target.value))}
-                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, #f7931a ${(loanCollateral / 5) * 100}%, rgba(255,255,255,0.1) ${(loanCollateral / 5) * 100}%)`,
-                  outline: "none",
-                }}
-              />
-            </div>
-
-            {/* LTV bar */}
-            <div className="mb-4">
-              <div className="flex justify-between mb-2">
-                <span className="text-xs text-white/40">Loan-to-Value (LTV)</span>
-                <span className="text-sm font-bold" style={{ color: ltv > 80 ? "#ff4d4d" : ltv > 65 ? "#fbbf24" : "#00ff80" }}>
-                  {ltv}%
-                </span>
+              <div style={{ height: "4px", borderRadius: "2px", background: "rgba(245,240,232,0.06)" }}>
+                <div style={{ width: "65%", height: "100%", borderRadius: "2px", background: `linear-gradient(90deg, ${WARM}, rgba(212,146,106,0.5))` }} />
               </div>
-              <div className="rounded-full overflow-hidden" style={{ height: "8px", background: "rgba(255,255,255,0.08)" }}>
-                <div
-                  className="h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${ltv}%`,
-                    background: ltv > 80
-                      ? "linear-gradient(90deg, #ff4d4d, #ff8800)"
-                      : ltv > 65
-                      ? "linear-gradient(90deg, #fbbf24, #f59e0b)"
-                      : "linear-gradient(90deg, #00ff80, #00cc66)",
-                    boxShadow: `0 0 8px rgba(0,255,128,0.3)`,
-                  }}
-                />
-              </div>
-              <div className="flex justify-between mt-1">
-                <span style={{ fontSize: "9px" }} className="text-white/20">0%</span>
-                <span style={{ fontSize: "9px" }} className="text-white/30">Safe: &lt;65%</span>
-                <span style={{ fontSize: "9px" }} className="text-white/20">100%</span>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "6px" }}>
+                <span style={{ color: "rgba(245,240,232,0.15)", fontSize: "9px" }}>Safe zone</span>
+                <span style={{ color: "rgba(245,240,232,0.15)", fontSize: "9px" }}>Liq. at 85%</span>
               </div>
             </div>
 
-            {/* Loan details */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl p-3" style={{ background: "rgba(0,0,0,0.3)" }}>
-                <div className="text-xs text-white/40 mb-1">Collateral Value</div>
-                <div className="text-base font-bold text-white">${collateralValue.toLocaleString("en-US", { maximumFractionDigits: 0 })}</div>
-              </div>
-              <div className="rounded-2xl p-3" style={{ background: "rgba(0,0,0,0.3)" }}>
-                <div className="text-xs text-white/40 mb-1">Max Borrow</div>
-                <div className="text-base font-bold" style={{ color: "#00ff80" }}>
-                  ${maxLoan.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              {[
+                { l: "Collateral Value", v: `$${collVal.toLocaleString("en-US", { maximumFractionDigits: 0 })}` },
+                { l: "Max Borrow",       v: `$${maxLoan.toLocaleString("en-US", { maximumFractionDigits: 0 })}`, hi: true },
+                { l: "Interest Rate",    v: "4.5% APR" },
+                { l: "Term",             v: "Flexible" },
+              ].map((row) => (
+                <div key={row.l} style={{ padding: "12px 14px", borderRadius: "12px", background: "rgba(245,240,232,0.03)" }}>
+                  <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "6px" }}>{row.l}</div>
+                  <div style={{ color: row.hi ? WARM : IVORY, fontSize: "15px", fontWeight: 300, opacity: row.hi ? 1 : 0.8 }}>{row.v}</div>
                 </div>
-              </div>
-              <div className="rounded-2xl p-3" style={{ background: "rgba(0,0,0,0.3)" }}>
-                <div className="text-xs text-white/40 mb-1">Interest Rate</div>
-                <div className="text-base font-bold text-white">4.5% APR</div>
-              </div>
-              <div className="rounded-2xl p-3" style={{ background: "rgba(0,0,0,0.3)" }}>
-                <div className="text-xs text-white/40 mb-1">Term</div>
-                <div className="text-base font-bold text-white">Flexible</div>
-              </div>
+              ))}
             </div>
           </div>
 
-          <div
-            className="flex items-start gap-2 px-3 py-2.5 rounded-xl mb-4"
-            style={{ background: "rgba(0,255,128,0.05)", border: "1px solid rgba(0,255,128,0.12)" }}
-          >
-            <ShieldCheck size={12} style={{ color: "#00ff80", marginTop: "2px" }} />
-            <p style={{ fontSize: "10px" }} className="text-white/40">
-              Collateral is held in licensed custody under Decree No. 19.
-              Liquidation only occurs at 85% LTV with 24-hour notice.
+          <div style={{ padding: "12px 16px", borderRadius: "14px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, marginBottom: "18px" }}>
+            <p style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", lineHeight: 1.7 }}>
+              Collateral held in licensed custody under Decree No. 19. Liquidation only at 85% LTV with 24-hour prior notice.
             </p>
           </div>
 
-          <button
-            className="w-full py-3.5 rounded-2xl font-bold text-sm transition-all duration-200 active:scale-[0.98]"
-            style={{
-              background: "linear-gradient(135deg, #f7931a, #e8830e)",
-              color: "#020b14",
-              boxShadow: "0 0 20px rgba(247,147,26,0.2)",
-            }}
-          >
+          <button style={{
+            width: "100%", padding: "18px", borderRadius: "18px",
+            background: "linear-gradient(135deg, rgba(212,146,106,0.85), rgba(190,116,82,0.85))",
+            border: "none", color: "#0a0908", fontSize: "13px", fontWeight: 500,
+            letterSpacing: "0.05em", cursor: "pointer",
+          }}>
             Apply for BTC-Backed Loan
           </button>
         </>
