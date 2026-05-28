@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { AccountProvider } from "@/context/AccountContext";
 import HomeScreen    from "@/screens/HomeScreen";
 import BridgeScreen  from "@/screens/BridgeScreen";
 import EarnScreen    from "@/screens/EarnScreen";
@@ -9,63 +8,61 @@ export type Tab = "home"|"bridge"|"earn"|"history";
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("home");
-  const go = useCallback((t: Tab) => setTab(t), []);
+  const go = useCallback((t:Tab)=>setTab(t),[]);
 
   return (
-    <AccountProvider>
+    <div style={{
+      minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center",
+      background:"radial-gradient(ellipse 100% 70% at 50% 0%, #CFCFE0 0%, #B8B8C8 100%)",
+    }}>
       <div style={{
-        minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center",
-        background:"radial-gradient(ellipse 80% 60% at 50% -10%,#0E1728 0%,#060810 70%)",
+        position:"relative", display:"flex", flexDirection:"column",
+        width:"390px", height:"844px", borderRadius:"52px",
+        background:"var(--bg)",
+        boxShadow:"0 0 0 8px rgba(255,255,255,0.18), 0 40px 80px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.08)",
+        overflow:"hidden",
       }}>
-        <div style={{
-          position:"relative", display:"flex", flexDirection:"column",
-          width:"390px", height:"844px", borderRadius:"50px",
-          background:"var(--bg)",
-          boxShadow:"0 0 0 1px rgba(255,255,255,0.06),0 0 0 8px rgba(255,255,255,0.03),0 40px 80px rgba(0,0,0,0.7)",
-          overflow:"hidden",
-        }}>
-          {/* Side specular */}
-          <div style={{ position:"absolute", top:0, left:"12%", right:"12%", height:"1px", zIndex:20, background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)" }}/>
-          {/* Dynamic island */}
-          <div style={{ position:"absolute", top:12, left:"50%", transform:"translateX(-50%)", width:120, height:34, borderRadius:20, background:"#000", zIndex:15 }}/>
+        {/* Screen glare top edge */}
+        <div style={{ position:"absolute", top:0, left:"12%", right:"12%", height:"1px", zIndex:20, background:"linear-gradient(90deg,transparent,rgba(255,255,255,0.85),transparent)" }}/>
+        {/* Dynamic island */}
+        <div style={{ position:"absolute", top:12, left:"50%", transform:"translateX(-50%)", width:120, height:34, borderRadius:20, background:"#0F0F10", zIndex:15 }}/>
 
-          {/* Status bar */}
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"18px 28px 0", flexShrink:0, zIndex:5 }}>
-            <span style={{ color:"var(--t1)", fontSize:"15px", fontWeight:700, fontFamily:"var(--mono)" }}>9:41</span>
-            <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
-              <svg width="17" height="11" viewBox="0 0 17 11" fill="none">
-                {[0,1,2,3].map((i)=>(
-                  <rect key={i} x={i*4.5} y={10-[3,5,8,11][i]} width="3" height={[3,5,8,11][i]} rx="1"
-                    fill="var(--t1)" opacity={[0.25,0.45,0.7,1][i]}/>
-                ))}
-              </svg>
-              <svg width="15" height="11" viewBox="0 0 15 11" fill="none" stroke="var(--t1)" strokeWidth="1.4">
-                <path d="M7.5 2C9.7 2 11.6 3.1 12.8 4.8" opacity="0.3"/>
-                <path d="M7.5 2C9 2 10.3 2.9 11.2 4.2" opacity="0.6"/>
-                <path d="M7.5 2C8.3 2 9 2.5 9.5 3.3"/>
-                <circle cx="7.5" cy="9.5" r="1.2" fill="var(--t1)" stroke="none"/>
-              </svg>
-              <div style={{ display:"flex", alignItems:"center", gap:"2px" }}>
-                <div style={{ width:"24px", height:"12px", borderRadius:"3.5px", border:"1.5px solid rgba(248,250,252,0.3)", padding:"1.5px", display:"flex", alignItems:"center" }}>
-                  <div style={{ width:"68%", height:"100%", borderRadius:"1.5px", background:"var(--t1)" }}/>
-                </div>
+        {/* Status bar */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"18px 28px 0", flexShrink:0, zIndex:5 }}>
+          <span style={{ color:"var(--t1)", fontSize:"15px", fontWeight:700 }}>9:41</span>
+          <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
+            <svg width="17" height="12" viewBox="0 0 17 12" fill="var(--t1)">
+              <rect x="0" y="4" width="3" height="8" rx="1" opacity="0.3"/>
+              <rect x="4.5" y="2.5" width="3" height="9.5" rx="1" opacity="0.5"/>
+              <rect x="9" y="0.5" width="3" height="11.5" rx="1" opacity="0.7"/>
+              <rect x="13.5" y="0" width="3" height="12" rx="1"/>
+            </svg>
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="var(--t1)" strokeWidth="1.5">
+              <path d="M8 3C10.2 3 12.2 4 13.6 5.6" opacity="0.4"/>
+              <path d="M8 3C9.5 3 10.8 3.8 11.8 5" opacity="0.7"/>
+              <path d="M8 3C8.8 3 9.5 3.5 10 4.2"/>
+              <circle cx="8" cy="10.5" r="1.2" fill="var(--t1)" stroke="none"/>
+            </svg>
+            <div style={{ display:"flex", alignItems:"center", gap:"2px" }}>
+              <div style={{ width:"25px", height:"12px", borderRadius:"3.5px", border:"1.5px solid rgba(15,15,16,0.35)", padding:"1.5px", display:"flex", alignItems:"center" }}>
+                <div style={{ width:"65%", height:"100%", borderRadius:"2px", background:"var(--t1)" }}/>
               </div>
             </div>
           </div>
-
-          {/* Screen */}
-          <div style={{ flex:1, overflowY:"auto", position:"relative" }} key={tab}>
-            <div className="fu">
-              {tab==="home"    && <HomeScreen   onNavigate={go}/>}
-              {tab==="bridge"  && <BridgeScreen />}
-              {tab==="earn"    && <EarnScreen   />}
-              {tab==="history" && <HistoryScreen/>}
-            </div>
-          </div>
-
-          <BottomNav active={tab} onChange={go}/>
         </div>
+
+        {/* Screen */}
+        <div style={{ flex:1, overflowY:"auto", position:"relative" }} key={tab}>
+          <div className="fade-up">
+            {tab==="home"    && <HomeScreen   onNavigate={go}/>}
+            {tab==="bridge"  && <BridgeScreen />}
+            {tab==="earn"    && <EarnScreen   />}
+            {tab==="history" && <HistoryScreen/>}
+          </div>
+        </div>
+
+        <BottomNav active={tab} onChange={go}/>
       </div>
-    </AccountProvider>
+    </div>
   );
 }
