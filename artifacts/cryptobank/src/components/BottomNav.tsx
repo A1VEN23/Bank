@@ -1,72 +1,59 @@
 import { useState } from "react";
 import type { Tab } from "@/App";
 
-const TABS: { id: Tab; label: string; path: string }[] = [
-  { id:"home",    label:"Home",   path:"M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" },
-  { id:"bridge",  label:"Bridge", path:"M7 16l-4-4 4-4M17 8l4 4-4 4M14 4l-4 16" },
-  { id:"earn",    label:"Earn",   path:"M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" },
-  { id:"history", label:"AML",    path:"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
+const ITEMS: { id: Tab; label: string; d: string }[] = [
+  { id:"home",    label:"Главная", d:"M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z M9 21V12h6v9" },
+  { id:"bridge",  label:"Переводы",d:"M7 16l-4-4 4-4M17 8l4 4-4 4M14 4l-4 16" },
+  { id:"earn",    label:"Вклады",  d:"M12 3v1m0 16v1M4.22 4.22l.707.707M18.36 18.36l.707.707M1 12h1m20 0h1M4.22 19.78l.707-.707M18.36 5.64l.707-.707M12 7a5 5 0 110 10A5 5 0 0112 7z" },
+  { id:"history", label:"История", d:"M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
 ];
 
-interface Props { activeTab: Tab; onTabChange: (t: Tab) => void; }
-
-export default function BottomNav({ activeTab, onTabChange }: Props) {
+export default function BottomNav({ active, onChange }: { active: Tab; onChange: (t: Tab) => void }) {
   const [pressed, setPressed] = useState<Tab | null>(null);
 
   return (
     <div style={{
-      flexShrink: 0,
-      background: "rgba(245,244,240,0.92)",
-      borderTop: "1px solid var(--border)",
-      backdropFilter: "blur(24px)",
-      WebkitBackdropFilter: "blur(24px)",
+      flexShrink:0, background:"rgba(248,248,250,0.92)",
+      borderTop:"1px solid var(--sep)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
     }}>
-      <div style={{ display:"flex", justifyContent:"space-around", padding:"10px 4px 0" }}>
-        {TABS.map((t) => {
-          const active = activeTab === t.id;
+      <div style={{ display:"flex", padding:"8px 0 0" }}>
+        {ITEMS.map(item => {
+          const on = active === item.id;
+          const pr = pressed === item.id;
           return (
-            <button key={t.id}
-              onPointerDown={() => setPressed(t.id)}
-              onPointerUp={() => { setPressed(null); onTabChange(t.id); }}
-              onPointerLeave={() => setPressed(null)}
+            <button key={item.id}
+              onPointerDown={()=>setPressed(item.id)}
+              onPointerUp={()=>{ setPressed(null); onChange(item.id); }}
+              onPointerLeave={()=>setPressed(null)}
               style={{
-                display:"flex", flexDirection:"column", alignItems:"center", gap:"5px",
-                padding:"8px 16px", borderRadius:"16px", border:"none", cursor:"pointer",
-                background: active ? "rgba(10,9,8,0.07)" : "transparent",
-                transform: pressed === t.id ? "scale(0.9)" : "scale(1)",
-                transition: "transform 0.1s ease, background 0.2s ease",
+                flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"4px",
+                padding:"6px 0 10px", background:"none", border:"none", cursor:"pointer",
+                transform: pr ? "scale(0.88)" : "scale(1)",
+                transition:"transform 0.12s cubic-bezier(0.34,1.56,0.64,1)",
               }}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                stroke={active ? "var(--dark)" : "var(--ink-35)"}
-                strokeWidth={active ? "2" : "1.5"}
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke={on ? "var(--brand)" : "var(--t3)"}
+                strokeWidth={on ? "2" : "1.7"}
                 strokeLinecap="round" strokeLinejoin="round"
-                style={{ transition:"stroke 0.2s, stroke-width 0.2s", filter: active ? "none" : "none" }}
+                style={{ transition:"stroke 0.18s, stroke-width 0.18s" }}
               >
-                <path d={t.path}/>
+                <path d={item.d}/>
               </svg>
               <span style={{
-                fontSize:"9px", letterSpacing:"0.08em", textTransform:"uppercase",
-                fontWeight: active ? 700 : 400,
-                color: active ? "var(--ink)" : "var(--ink-35)",
-                transition: "color 0.2s, font-weight 0.2s",
+                fontSize:"10px", fontWeight: on ? 600 : 400,
+                color: on ? "var(--brand)" : "var(--t3)",
+                letterSpacing:"0.01em", transition:"color 0.18s, font-weight 0.18s",
               }}>
-                {t.label}
+                {item.label}
               </span>
-              {active && (
-                <div style={{
-                  position:"absolute", bottom:"0",
-                  width:"4px", height:"4px", borderRadius:"50%",
-                  background:"var(--dark)",
-                  marginTop:"auto",
-                }} />
-              )}
             </button>
           );
         })}
       </div>
-      <div style={{ display:"flex", justifyContent:"center", padding:"12px 0 8px" }}>
-        <div style={{ width:"130px", height:"5px", borderRadius:"3px", background:"rgba(15,13,10,0.15)" }} />
+      {/* Home indicator */}
+      <div style={{ display:"flex", justifyContent:"center", padding:"8px 0 10px" }}>
+        <div style={{ width:"134px", height:"5px", borderRadius:"3px", background:"rgba(15,15,16,0.18)" }}/>
       </div>
     </div>
   );

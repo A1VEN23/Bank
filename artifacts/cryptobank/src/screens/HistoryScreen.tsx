@@ -1,171 +1,182 @@
 import { useState } from "react";
 
 type Tx = {
-  id:string; type:"receive"|"send"|"swap"|"deposit";
-  desc:string; amount:string; sub:string; positive:boolean;
-  time:string; date:string; score:number; txid:string;
-  fee:string; network:string; node:string; party:string;
+  id:string; type:"in"|"out"|"swap";
+  name:string; cat:string; icon:string; bg:string; iconC:string;
+  amt:number; cur:string; time:string; date:string;
+  score:number; txid:string; fee:string; network:string; party:string;
 };
 
-const TXS: Tx[] = [
-  { id:"1", type:"receive", desc:"Received Bitcoin",        amount:"+0.0842 BTC", sub:"+$3,978",  positive:true,  time:"14:32", date:"Today",     score:98,  txid:"a1b2c3d4e5f67890abcdef", fee:"0.000021 BTC", network:"Bitcoin Mainnet",  node:"BY-NODE-047",  party:"bc1q…k8z2"    },
-  { id:"2", type:"swap",    desc:"B2B Bridge: RUB → CNY",  amount:"150,000 RUB", sub:"−$1,650",  positive:false, time:"11:15", date:"Today",     score:100, txid:"tx_bridge_0x7a8b9c0d",  fee:"375 RUB",      network:"PBT Bridge Layer", node:"RU-PBT-012",   party:"CNY Merchant" },
-  { id:"3", type:"deposit", desc:"Crypto Deposit Opened",  amount:"+8.0% APY",   sub:"2,500 USDT",positive:true, time:"09:48", date:"Today",     score:99,  txid:"dep_0x2c3d4e5f6a7b",    fee:"0 USDT",       network:"TON Blockchain",   node:"BY-DEFI-003",  party:"Savings v2"   },
-  { id:"4", type:"send",    desc:"Sent USDT",              amount:"−850 USDT",   sub:"−$850",    positive:false, time:"18:24", date:"Yesterday", score:97,  txid:"0x9e8d7c6b5a4f3e2d",    fee:"1.2 USDT",     network:"TON Blockchain",   node:"BY-NODE-019",  party:"TVM…4fK9"     },
-  { id:"5", type:"receive", desc:"Staking Reward",         amount:"+12.45 TON",  sub:"+$76.93",  positive:true,  time:"06:00", date:"Yesterday", score:100, txid:"ton_reward_7f8a9b0c",    fee:"0.01 TON",     network:"TON Blockchain",   node:"AUTO-STAKE-01",party:"Staking Pool" },
-  { id:"6", type:"swap",    desc:"Swapped ETH → USDT",    amount:"0.5 ETH",     sub:"+$1,309",  positive:true,  time:"13:11", date:"May 26",    score:96,  txid:"0x1a2b3c4d5e6f7a8b",    fee:"0.0018 ETH",   network:"Ethereum Mainnet", node:"RU-NODE-088",  party:"DEX Router v3"},
+const ALL: Tx[] = [
+  { id:"1",  type:"in",   name:"Яндекс.Маркет — Возврат", cat:"Возврат",    icon:"📦", bg:"#EFF6FF", iconC:"#2563EB", amt:+1240,    cur:"BYN", time:"14:32", date:"Сегодня",     score:99,  txid:"byn_ref_0x7a8b9c0d1e2f", fee:"0 BYN",     network:"Internal",          party:"Яндекс.Маркет"    },
+  { id:"2",  type:"out",  name:"Яндекс Такси",              cat:"Транспорт",  icon:"🚕", bg:"#FFF7ED", iconC:"#EA580C", amt:-178.50,  cur:"BYN", time:"11:15", date:"Сегодня",     score:97,  txid:"ton_0x2c3d4e5f6a7b8c",   fee:"0.12 BYN",  network:"TON Blockchain",    party:"Taxi Aggregator"  },
+  { id:"3",  type:"out",  name:"Пятёрочка",                 cat:"Продукты",   icon:"🛒", bg:"#F0FDF4", iconC:"#16A34A", amt:-89.40,   cur:"BYN", time:"09:48", date:"Сегодня",     score:98,  txid:"byn_pos_0xabcdef1234",   fee:"0 BYN",     network:"Fiat Rail",         party:"Пятёрочка #0218"  },
+  { id:"4",  type:"swap", name:"B2B Bridge: RUB→CNY",       cat:"Перевод",    icon:"⇄",  bg:"#EDE9FE", iconC:"#7C3AED", amt:-150000,  cur:"RUB", time:"16:20", date:"Вчера",       score:100, txid:"bridge_0x9d8c7b6a5f4e", fee:"375 RUB",   network:"PBT Bridge",        party:"CNY Merchant"     },
+  { id:"5",  type:"in",   name:"Стейкинг — награда",        cat:"Доходность", icon:"✦",  bg:"#F0FDF4", iconC:"#16A34A", amt:+12.45,   cur:"TON", time:"06:00", date:"Вчера",       score:100, txid:"ton_stake_7f8a9b0c1d",   fee:"0.01 TON",  network:"TON Blockchain",    party:"Staking Pool #7"  },
+  { id:"6",  type:"out",  name:"Netflix",                   cat:"Подписки",   icon:"🎬", bg:"#FFF1F2", iconC:"#E11D48", amt:-15.99,   cur:"USD", time:"13:00", date:"Вчера",       score:96,  txid:"usdt_0x1a2b3c4d5e6f",   fee:"0.5 USDT",  network:"TON Blockchain",    party:"Netflix Inc."     },
+  { id:"7",  type:"in",   name:"Перевод от Ивана К.",        cat:"Входящий",   icon:"↙",  bg:"#F0FDF4", iconC:"#16A34A", amt:+5000,    cur:"BYN", time:"09:14", date:"24 мая",      score:99,  txid:"byn_p2p_0x3d4e5f6a7b",  fee:"0 BYN",     network:"Fiat Rail",         party:"Иван К."          },
+  { id:"8",  type:"out",  name:"McDonald's",                cat:"Рестораны",  icon:"🍔", bg:"#FFF7ED", iconC:"#F59E0B", amt:-42.80,   cur:"BYN", time:"20:33", date:"24 мая",      score:97,  txid:"byn_pos_0xfed987654",   fee:"0 BYN",     network:"Fiat Rail",         party:"McDonald's #0041" },
+  { id:"9",  type:"swap", name:"ETH → USDT",                cat:"Обмен",      icon:"⇄",  bg:"#EDE9FE", iconC:"#7C3AED", amt:-0.5,     cur:"ETH", time:"18:12", date:"24 мая",      score:96,  txid:"eth_0x5f6a7b8c9d0e",   fee:"0.0018 ETH",network:"Ethereum Mainnet",  party:"DEX Router v3"    },
 ];
 
-const GLYPH: Record<string,string> = { receive:"↓", send:"↑", swap:"⇄", deposit:"◈" };
-const ICON_STYLE: Record<string,{bg:string;border:string;color:string}> = {
-  receive: { bg:"#DCFCE7", border:"rgba(22,163,74,0.2)",  color:"#15803D" },
-  send:    { bg:"#FEE2E2", border:"rgba(220,38,38,0.2)",  color:"#DC2626" },
-  swap:    { bg:"#EDE9FE", border:"rgba(139,92,246,0.2)", color:"#7C3AED" },
-  deposit: { bg:"#FEF3C7", border:"rgba(245,158,11,0.2)", color:"#B45309" },
-};
-
-const grouped: Record<string,Tx[]> = {};
-TXS.forEach(t=>{ if(!grouped[t.date]) grouped[t.date]=[]; grouped[t.date].push(t); });
-
-function Score({ score }: { score:number }) {
-  const ok = score >= 95;
-  return (
-    <div style={{ display:"inline-flex", alignItems:"center", gap:"4px", padding:"3px 8px", borderRadius:"6px", background:ok?"#DCFCE7":"#FEE2E2", border:`1px solid ${ok?"rgba(22,163,74,0.25)":"rgba(220,38,38,0.25)"}` }}>
-      <div style={{ width:"4px", height:"4px", borderRadius:"50%", background:ok?"#16A34A":"#DC2626" }} />
-      <span style={{ fontSize:"9px", fontWeight:700, color:ok?"#15803D":"#DC2626" }}>{score}</span>
-    </div>
-  );
+function groupBy<T>(arr: T[], key: (x:T)=>string): Record<string,T[]> {
+  return arr.reduce((acc,x)=>{ const k=key(x); acc[k]??=[]; acc[k].push(x); return acc; },{} as Record<string,T[]>);
 }
 
-function DetailRow({ label, value, mono }: { label:string; value:string; mono?:boolean }) {
+const GROUPED = groupBy(ALL, t=>t.date);
+
+function AmtColor(t: Tx) { return t.type==="in" ? "var(--green)" : "var(--t1)"; }
+
+function Score({ s }: { s:number }) {
+  const ok = s>=95;
   return (
-    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 0", borderBottom:"1px solid var(--border)" }}>
-      <span style={{ fontSize:"12px", color:"var(--ink-35)", fontWeight:500 }}>{label}</span>
-      <span style={{ fontSize:"12px", color:"var(--ink)", fontWeight:500, fontFamily:mono?"monospace":"inherit", maxWidth:"180px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{value}</span>
+    <div style={{ display:"inline-flex", alignItems:"center", gap:"3px", padding:"2px 7px", borderRadius:"5px", background:ok?"var(--green-bg)":"var(--red-bg)" }}>
+      <div style={{ width:"4px", height:"4px", borderRadius:"50%", background:ok?"var(--green)":"var(--red)" }}/>
+      <span style={{ fontSize:"9px", fontWeight:700, color:ok?"var(--green)":"var(--red)" }}>{s}</span>
     </div>
   );
 }
 
 export default function HistoryScreen() {
   const [sel, setSel] = useState<Tx|null>(null);
+  const [search, setSearch] = useState("");
+
+  const filtered = search ? ALL.filter(t=>t.name.toLowerCase().includes(search.toLowerCase())||t.cat.toLowerCase().includes(search.toLowerCase())) : null;
+  const data = filtered ? groupBy(filtered,"date") : GROUPED;
+
+  const totalOut = ALL.filter(t=>t.type==="out"&&t.cur==="BYN").reduce((s,t)=>s+Math.abs(t.amt),0);
 
   return (
-    <div style={{ padding:"20px 20px 28px", position:"relative" }}>
+    <div style={{ padding:"20px 16px 28px", position:"relative" }}>
 
       {/* Header */}
-      <div className="fade-up" style={{ marginBottom:"22px" }}>
-        <div style={{ fontSize:"11px", color:"var(--ink-35)", letterSpacing:"0.14em", textTransform:"uppercase", fontWeight:600, marginBottom:"8px" }}>Neural AML Engine v4.2</div>
-        <div style={{ fontSize:"30px", fontWeight:700, color:"var(--ink)", letterSpacing:"-1px", lineHeight:1.1, marginBottom:"16px" }}>
-          Transaction<br/><span style={{ fontWeight:300, color:"var(--ink-60)" }}>Feed</span>
+      <div className="fade-up" style={{ marginBottom:"20px" }}>
+        <div style={{ fontSize:"13px", color:"var(--t2)", fontWeight:500, marginBottom:"6px" }}>Neural AML Engine v4.2</div>
+        <div style={{ fontSize:"28px", fontWeight:700, color:"var(--t1)", letterSpacing:"-0.8px", marginBottom:"16px" }}>История</div>
+
+        {/* Monthly summary */}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"16px" }}>
+          <div style={{ padding:"16px", borderRadius:"16px", background:"var(--surface)", border:"1px solid var(--sep)", boxShadow:"var(--card-shadow)" }}>
+            <div style={{ fontSize:"11px", color:"var(--t2)", fontWeight:600, letterSpacing:"0.04em", textTransform:"uppercase", marginBottom:"6px" }}>Расходы за май</div>
+            <div style={{ fontSize:"22px", fontWeight:700, color:"var(--t1)", letterSpacing:"-0.5px", fontVariantNumeric:"tabular-nums" }}>{totalOut.toLocaleString("ru-RU",{maximumFractionDigits:0})} <span style={{ fontSize:"14px", fontWeight:400, color:"var(--t2)" }}>BYN</span></div>
+          </div>
+          <div style={{ padding:"16px", borderRadius:"16px", background:"#DCFCE7", border:"1px solid rgba(0,185,107,0.2)" }}>
+            <div style={{ fontSize:"11px", color:"var(--green)", fontWeight:600, letterSpacing:"0.04em", textTransform:"uppercase", marginBottom:"6px" }}>AML статус</div>
+            <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              <div>
+                <div style={{ fontSize:"14px", fontWeight:700, color:"var(--green)" }}>9/9 чистых</div>
+                <div style={{ fontSize:"10px", color:"var(--green)", opacity:0.7 }}>Ср. оценка 98.1</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Summary banner */}
-        <div style={{ display:"flex", alignItems:"center", gap:"14px", padding:"14px 16px", borderRadius:"18px", background:"#DCFCE7", border:"1px solid rgba(22,163,74,0.2)" }}>
-          <div style={{ width:"38px", height:"38px", borderRadius:"12px", background:"rgba(22,163,74,0.15)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-          </div>
-          <div style={{ flex:1 }}>
-            <div style={{ fontSize:"13px", fontWeight:700, color:"#15803D", marginBottom:"3px" }}>All Clear — 6/6 Verified</div>
-            <div style={{ fontSize:"10px", color:"#16A34A", opacity:0.7 }}>Avg score 98.3 · 0 flags · Fully compliant</div>
-          </div>
-          <div style={{ padding:"5px 10px", borderRadius:"8px", background:"rgba(22,163,74,0.15)" }}>
-            <span style={{ fontSize:"11px", fontWeight:700, color:"#15803D" }}>SAFE</span>
-          </div>
+        {/* Search */}
+        <div style={{ display:"flex", alignItems:"center", gap:"10px", padding:"12px 14px", borderRadius:"14px", background:"var(--surface)", border:"1px solid var(--sep)", boxShadow:"var(--card-shadow)" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Поиск операций..." style={{ flex:1, background:"none", border:"none", outline:"none", fontSize:"15px", color:"var(--t1)" }}/>
+          {search && <button onClick={()=>setSearch("")} style={{ background:"none", border:"none", cursor:"pointer", color:"var(--t3)", fontSize:"16px" }}>×</button>}
         </div>
       </div>
 
       {/* Transactions */}
-      {Object.entries(grouped).map(([date,txs])=>(
-        <div key={date} style={{ marginBottom:"6px" }}>
-          <div style={{ fontSize:"10px", color:"var(--ink-35)", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:600, marginBottom:"10px", paddingTop:"6px" }}>{date}</div>
-          <div className="card" style={{ overflow:"hidden", padding:0 }}>
-            {txs.map((tx,i)=>{
-              const style = ICON_STYLE[tx.type];
-              return (
+      <div className="fade-up s2">
+        {Object.entries(data).map(([date,txs])=>(
+          <div key={date} style={{ marginBottom:"20px" }}>
+            <div style={{ fontSize:"13px", fontWeight:700, color:"var(--t2)", marginBottom:"10px" }}>{date}</div>
+            <div style={{ borderRadius:"20px", background:"var(--surface)", border:"1px solid var(--sep)", boxShadow:"var(--card-shadow)", overflow:"hidden" }}>
+              {txs.map((tx,i)=>(
                 <button key={tx.id} onClick={()=>setSel(tx)}
                   style={{
-                    width:"100%", display:"flex", alignItems:"center", gap:"14px",
-                    padding:"14px 18px",
-                    borderBottom: i<txs.length-1?"1px solid var(--border)":"none",
+                    width:"100%", display:"flex", alignItems:"center", gap:"12px", padding:"13px 16px",
+                    borderBottom:i<txs.length-1?"1px solid var(--sep)":"none",
                     background:"transparent", border:"none", cursor:"pointer", textAlign:"left",
-                    transition:"background 0.15s ease",
+                    transition:"background 0.1s",
                   }}
-                  onMouseEnter={e=>(e.currentTarget.style.background="rgba(10,9,8,0.025)")}
+                  onMouseEnter={e=>(e.currentTarget.style.background="var(--surface-2)")}
                   onMouseLeave={e=>(e.currentTarget.style.background="transparent")}
                 >
-                  <div style={{ width:"40px", height:"40px", borderRadius:"13px", background:style.bg, border:`1px solid ${style.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                    <span style={{ fontSize:"16px", fontWeight:300, color:style.color }}>{GLYPH[tx.type]}</span>
+                  <div style={{ width:"44px", height:"44px", borderRadius:"14px", background:tx.bg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, fontSize:"20px" }}>
+                    {tx.icon}
                   </div>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontSize:"14px", fontWeight:600, color:"var(--ink)", marginBottom:"5px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{tx.desc}</div>
-                    <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
-                      <Score score={tx.score}/>
-                      <span style={{ fontSize:"10px", color:"var(--ink-35)" }}>{tx.time}</span>
+                    <div style={{ fontSize:"15px", fontWeight:600, color:"var(--t1)", marginBottom:"3px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{tx.name}</div>
+                    <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
+                      <span style={{ fontSize:"12px", color:"var(--t2)" }}>{tx.cat}</span>
+                      <span style={{ color:"var(--sep)", fontSize:"10px" }}>·</span>
+                      <Score s={tx.score}/>
                     </div>
                   </div>
                   <div style={{ textAlign:"right", flexShrink:0 }}>
-                    <div style={{ fontSize:"14px", fontWeight:700, color:tx.positive?"#16A34A":"var(--ink)", marginBottom:"3px" }}>{tx.amount}</div>
-                    <div style={{ fontSize:"10px", color:"var(--ink-35)" }}>{tx.sub}</div>
+                    <div style={{ fontSize:"15px", fontWeight:700, color:AmtColor(tx), fontVariantNumeric:"tabular-nums" }}>
+                      {tx.type==="in"?"+":""}{Math.abs(tx.amt).toLocaleString("ru-RU",{minimumFractionDigits:tx.cur==="ETH"?2:0,maximumFractionDigits:tx.cur==="ETH"?2:0})} {tx.cur}
+                    </div>
+                    <div style={{ fontSize:"11px", color:"var(--t3)", marginTop:"2px" }}>{tx.time}</div>
                   </div>
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
       {/* Detail sheet */}
       {sel && (
-        <div className="slide-up"
+        <div className="slide-sheet"
           onClick={()=>setSel(null)}
-          style={{
-            position:"absolute", inset:0, zIndex:50,
-            display:"flex", flexDirection:"column", justifyContent:"flex-end",
-            background:"rgba(15,13,10,0.5)", backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)",
-          }}
+          style={{ position:"absolute", inset:0, zIndex:50, display:"flex", flexDirection:"column", justifyContent:"flex-end", background:"rgba(15,15,16,0.45)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)" }}
         >
-          <div onClick={e=>e.stopPropagation()} style={{
-            borderRadius:"28px 28px 52px 52px",
-            background:"var(--surface)", padding:"24px 24px 32px",
-            boxShadow:"0 -8px 40px rgba(15,13,10,0.12)",
-          }}>
+          <div onClick={e=>e.stopPropagation()}
+            style={{ borderRadius:"28px 28px 52px 52px", background:"var(--surface)", padding:"24px 24px 36px", boxShadow:"0 -4px 32px rgba(15,15,16,0.1)" }}
+          >
             <div style={{ display:"flex", justifyContent:"center", marginBottom:"20px" }}>
-              <div style={{ width:"40px", height:"5px", borderRadius:"3px", background:"var(--ink-08)" }} />
+              <div style={{ width:"40px", height:"5px", borderRadius:"3px", background:"var(--sep)" }}/>
             </div>
 
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"20px" }}>
-              <div>
-                <div style={{ fontSize:"18px", fontWeight:700, color:"var(--ink)", marginBottom:"7px" }}>{sel.desc}</div>
-                <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
-                  <Score score={sel.score}/>
-                  <span style={{ fontSize:"11px", color:"var(--ink-35)" }}>Neural AML Verified</span>
+              <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
+                <div style={{ width:"50px", height:"50px", borderRadius:"16px", background:sel.bg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"22px" }}>
+                  {sel.icon}
+                </div>
+                <div>
+                  <div style={{ fontSize:"17px", fontWeight:700, color:"var(--t1)", marginBottom:"4px" }}>{sel.name}</div>
+                  <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
+                    <Score s={sel.score}/>
+                    <span style={{ fontSize:"12px", color:"var(--t2)" }}>AML проверен</span>
+                  </div>
                 </div>
               </div>
-              <button onClick={()=>setSel(null)} style={{
-                width:"34px", height:"34px", borderRadius:"10px",
-                background:"var(--ink-04)", border:"1px solid var(--border)",
-                cursor:"pointer", fontSize:"16px", color:"var(--ink-60)",
-                display:"flex", alignItems:"center", justifyContent:"center",
-              }}>×</button>
+              <button onClick={()=>setSel(null)} style={{ width:"32px", height:"32px", borderRadius:"10px", background:"var(--surface-2)", border:"1px solid var(--sep)", cursor:"pointer", fontSize:"18px", color:"var(--t2)", display:"flex", alignItems:"center", justifyContent:"center" }}>×</button>
             </div>
 
-            <div style={{ padding:"18px 20px", borderRadius:"18px", background:sel.positive?"#DCFCE7":"#F3F4F6", border:`1px solid ${sel.positive?"rgba(22,163,74,0.2)":"var(--border)"}`, textAlign:"center", marginBottom:"20px" }}>
-              <div style={{ fontSize:"30px", fontWeight:300, color:sel.positive?"#15803D":"var(--ink)", letterSpacing:"-1px", marginBottom:"4px" }}>{sel.amount}</div>
-              <div style={{ fontSize:"12px", color:"var(--ink-35)" }}>{sel.sub}</div>
+            {/* Amount */}
+            <div style={{ padding:"18px 20px", borderRadius:"18px", background: sel.type==="in"?"#DCFCE7":"var(--surface-2)", border:`1px solid ${sel.type==="in"?"rgba(0,185,107,0.2)":"var(--sep)"}`, textAlign:"center", marginBottom:"20px" }}>
+              <div style={{ fontSize:"36px", fontWeight:300, color:sel.type==="in"?"var(--green)":"var(--t1)", letterSpacing:"-1.5px", fontVariantNumeric:"tabular-nums" }}>
+                {sel.type==="in"?"+":""}{Math.abs(sel.amt).toLocaleString("ru-RU",{minimumFractionDigits:2})} {sel.cur}
+              </div>
+              <div style={{ fontSize:"13px", color:"var(--t2)", marginTop:"4px" }}>{sel.date} · {sel.time}</div>
             </div>
 
-            <DetailRow label="TXID"    value={sel.txid}    mono />
-            <DetailRow label="Network" value={sel.network}      />
-            <DetailRow label="Fee"     value={sel.fee}          />
-            <DetailRow label="Node"    value={sel.node}         />
-            <DetailRow label="Time"    value={`${sel.date} · ${sel.time}`} />
-            <DetailRow label="Party"   value={sel.party}        />
+            {/* Details */}
+            {[
+              { l:"ID транзакции", v:sel.txid,   mono:true  },
+              { l:"Сеть",          v:sel.network, mono:false },
+              { l:"Комиссия",      v:sel.fee,     mono:false },
+              { l:"Контрагент",    v:sel.party,   mono:false },
+            ].map(r=>(
+              <div key={r.l} style={{ display:"flex", justifyContent:"space-between", padding:"12px 0", borderBottom:"1px solid var(--sep)" }}>
+                <span style={{ fontSize:"14px", color:"var(--t2)" }}>{r.l}</span>
+                <span style={{ fontSize:"14px", fontWeight:500, color:"var(--t1)", fontFamily:r.mono?"monospace":"inherit", maxWidth:"180px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{r.v}</span>
+              </div>
+            ))}
 
-            <div style={{ display:"flex", alignItems:"center", gap:"12px", padding:"14px 16px", borderRadius:"16px", background:"#DCFCE7", border:"1px solid rgba(22,163,74,0.2)", marginTop:"16px" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            {/* Verdict */}
+            <div style={{ display:"flex", alignItems:"center", gap:"12px", padding:"14px 16px", borderRadius:"14px", background:"#DCFCE7", border:"1px solid rgba(0,185,107,0.2)", marginTop:"16px" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
               <div>
-                <div style={{ fontSize:"12px", fontWeight:700, color:"#15803D", marginBottom:"3px" }}>Neural AML Verdict: LEGAL & SAFE</div>
-                <div style={{ fontSize:"10px", color:"#16A34A", opacity:0.7 }}>No sanctions match · Score {sel.score}/100 · Decree No. 19</div>
+                <div style={{ fontSize:"13px", fontWeight:700, color:"var(--green)" }}>Нейросеть: ЛЕГАЛЬНО И БЕЗОПАСНО</div>
+                <div style={{ fontSize:"10px", color:"var(--green)", opacity:0.7 }}>Нет нарушений · Оценка {sel.score}/100 · Декрет №19</div>
               </div>
             </div>
           </div>
