@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "CryptoBank — Hybrid Crypto-Banking App"
+version = "1.0.0"
+id = "artifacts/cryptobank"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20484
+
+[services.development]
+run = "pnpm --filter @workspace/cryptobank run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cryptobank", "run", "build" ]
+publicDir = "artifacts/cryptobank/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20484"
+BASE_PATH = "/"
