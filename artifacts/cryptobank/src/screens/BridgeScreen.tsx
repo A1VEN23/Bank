@@ -1,185 +1,174 @@
 import { useState } from "react";
 
-const IVORY = "#F5F0E8";
-const IVORY_DIM = "rgba(245,240,232,0.05)";
-const IVORY_BORDER = "rgba(245,240,232,0.08)";
-const WARM = "#D4926A";
+const TARGETS = ["CNY","AED","TRY","INR","USD","EUR","KZT"];
+const RATES: Record<string,number> = { CNY:0.0809,AED:0.0277,TRY:0.882,INR:0.847,USD:0.011,EUR:0.0101,KZT:4.98 };
 
-const targets = ["CNY", "AED", "TRY", "INR", "USD", "EUR", "KZT"];
+type State = "idle"|"checking"|"ready"|"executing"|"done";
 
-const RATES: Record<string, number> = {
-  CNY: 0.0809, AED: 0.0277, TRY: 0.882,
-  INR: 0.847,  USD: 0.011,  EUR: 0.0101, KZT: 4.98,
-};
-
-function Row({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function PrimaryBtn({ label, onClick, state }: { label:string; onClick:()=>void; state?:State }) {
+  const [down, setDown] = useState(false);
+  const busy = state === "executing";
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid rgba(245,240,232,0.04)" }}>
-      <span style={{ color: "rgba(245,240,232,0.3)", fontSize: "12px" }}>{label}</span>
-      <span style={{ color: highlight ? WARM : IVORY, fontSize: "12px", fontWeight: highlight ? 500 : 400, opacity: highlight ? 1 : 0.8 }}>{value}</span>
+    <button
+      onPointerDown={() => setDown(true)}
+      onPointerUp={() => { setDown(false); onClick(); }}
+      onPointerLeave={() => setDown(false)}
+      disabled={busy}
+      style={{
+        width:"100%", padding:"18px", borderRadius:"18px", border:"none",
+        fontSize:"14px", fontWeight:700, letterSpacing:"0.03em",
+        cursor: busy ? "default" : "pointer",
+        background: state==="done"
+          ? "#16A34A"
+          : "var(--dark)",
+        color: state==="done" ? "#fff" : "#fff",
+        transform: down ? "scale(0.97)" : "scale(1)",
+        transition:"transform 0.12s ease, background 0.3s ease, box-shadow 0.12s ease",
+        boxShadow: down ? "0 2px 8px rgba(0,0,0,0.15)" : "0 4px 20px rgba(10,9,8,0.25), 0 1px 0 rgba(255,255,255,0.05) inset",
+        display:"flex", alignItems:"center", justifyContent:"center", gap:"8px",
+      }}
+    >
+      {state==="executing" && (
+        <svg className="spin-anim" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+      )}
+      {state==="done" && (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      )}
+      {state==="done" ? "Transfer Sent!" : state==="executing" ? "Processing…" : label}
+    </button>
+  );
+}
+
+function RouteStep({ label, sub, highlight }: { label:string; sub:string; highlight?:boolean }) {
+  return (
+    <div style={{
+      display:"flex", flexDirection:"column", alignItems:"center", gap:"3px",
+      padding:"10px 14px", borderRadius:"14px",
+      background: highlight ? "var(--dark)" : "var(--ink-04)",
+      border: `1px solid ${highlight ? "transparent" : "var(--border)"}`,
+    }}>
+      <span style={{ fontSize:"13px", fontWeight:700, color: highlight ? "#fff" : "var(--ink)", letterSpacing:"0.02em" }}>{label}</span>
+      <span style={{ fontSize:"9px", color: highlight ? "rgba(255,255,255,0.4)" : "var(--ink-35)", letterSpacing:"0.08em" }}>{sub}</span>
     </div>
   );
 }
 
 export default function BridgeScreen() {
   const [amount, setAmount] = useState("150000");
-  const [from] = useState("RUB");
   const [to, setTo] = useState("CNY");
-  const [state, setState] = useState<"idle" | "loading" | "done">("idle");
+  const [txState, setTxState] = useState<State>("idle");
 
-  const num = parseFloat(amount.replace(/\D/g, "")) || 0;
-  const rate = RATES[to] ?? 0.01;
-  const received = (num * rate).toLocaleString("en-US", { maximumFractionDigits: 2 });
-  const fee = (num * 0.0025).toFixed(0);
+  const num = parseFloat(amount)||0;
+  const rate = RATES[to]??0.01;
+  const received = (num*rate).toLocaleString("en-US",{maximumFractionDigits:2});
+  const fee = (num*0.0025).toLocaleString("en-US",{maximumFractionDigits:0});
 
   const execute = () => {
-    setState("loading");
-    setTimeout(() => { setState("done"); setTimeout(() => setState("idle"), 3000); }, 2000);
+    if(txState!=="idle") return;
+    setTxState("executing");
+    setTimeout(()=>{ setTxState("done"); setTimeout(()=>setTxState("idle"),3500); },2200);
   };
 
   return (
-    <div style={{ padding: "20px 22px 20px" }}>
+    <div style={{ padding:"20px 20px 28px" }}>
 
       {/* Header */}
-      <div style={{ marginBottom: "32px" }}>
-        <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "10px" }}>
-          Decree No. 19 · SWIFT-Free
-        </div>
-        <div style={{ fontSize: "28px", fontWeight: 200, color: IVORY, letterSpacing: "-1px", lineHeight: 1.2 }}>
-          Transborder<br />
-          <span style={{ color: WARM }}>Bridge</span>
+      <div className="fade-up" style={{ marginBottom:"28px" }}>
+        <div style={{ fontSize:"11px", color:"var(--ink-35)", letterSpacing:"0.14em", textTransform:"uppercase", fontWeight:600, marginBottom:"8px" }}>Decree No. 19 · SWIFT-Free</div>
+        <div style={{ fontSize:"30px", fontWeight:700, color:"var(--ink)", letterSpacing:"-1px", lineHeight:1.1 }}>
+          Transborder<br/><span style={{ color:"var(--ink-60)", fontWeight:300 }}>Bridge</span>
         </div>
       </div>
 
-      {/* Sanction check */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: "14px",
-        padding: "14px 16px", borderRadius: "16px", marginBottom: "28px",
-        background: "rgba(212,146,106,0.06)", border: "1px solid rgba(212,146,106,0.14)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "12px", background: "rgba(212,146,106,0.1)", flexShrink: 0 }}>
-          <span style={{ fontSize: "16px" }}>◉</span>
+      {/* Sanction badge */}
+      <div className="fade-up card-sm" style={{ display:"flex", alignItems:"center", gap:"14px", padding:"14px 16px", marginBottom:"20px", animationDelay:"0.05s" }}>
+        <div style={{ width:"38px", height:"38px", borderRadius:"12px", background:"#DCFCE7", border:"1px solid rgba(22,163,74,0.2)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
         </div>
-        <div>
-          <div style={{ color: IVORY, fontSize: "13px", fontWeight: 400, opacity: 0.85, marginBottom: "3px" }}>AI Risk & Sanction Check</div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: WARM, boxShadow: `0 0 6px ${WARM}` }} />
-            <span style={{ color: "rgba(212,146,106,0.7)", fontSize: "10px", letterSpacing: "0.08em" }}>100% CLEAN · OFAC · EU · UN verified</span>
-          </div>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:"13px", fontWeight:600, color:"var(--ink)", marginBottom:"3px" }}>AI Risk & Sanction Check</div>
+          <div style={{ fontSize:"10px", color:"var(--ink-35)" }}>OFAC · EU · UN · FinCEN — All lists clear</div>
         </div>
-        <div style={{ marginLeft: "auto", padding: "4px 10px", borderRadius: "8px", background: "rgba(212,146,106,0.1)" }}>
-          <span style={{ color: WARM, fontSize: "10px", fontWeight: 700 }}>SAFE</span>
+        <div style={{ padding:"5px 10px", borderRadius:"8px", background:"#DCFCE7", border:"1px solid rgba(22,163,74,0.2)" }}>
+          <span style={{ fontSize:"10px", fontWeight:700, color:"#15803D" }}>100% CLEAN</span>
         </div>
       </div>
 
-      {/* Form */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
+      {/* Transfer form */}
+      <div className="fade-up card" style={{ padding:"20px", marginBottom:"14px", animationDelay:"0.08s" }}>
+        <div style={{ fontSize:"10px", color:"var(--ink-35)", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:600, marginBottom:"16px" }}>Transfer Details</div>
+
         {/* Send */}
-        <div style={{ padding: "18px 20px", borderRadius: "18px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}` }}>
-          <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px" }}>You Send</div>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              style={{
-                flex: 1, background: "none", border: "none", outline: "none",
-                fontSize: "28px", fontWeight: 200, color: IVORY, letterSpacing: "-1px",
-              }}
+        <div style={{ padding:"16px", borderRadius:"16px", background:"var(--ink-04)", border:"1px solid var(--border)", marginBottom:"8px" }}>
+          <div style={{ fontSize:"10px", color:"var(--ink-35)", fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:"10px" }}>You Send</div>
+          <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
+            <input type="number" value={amount} onChange={e=>setAmount(e.target.value)}
+              style={{ flex:1, background:"none", border:"none", outline:"none", fontSize:"30px", fontWeight:300, color:"var(--ink)", letterSpacing:"-1px", fontVariantNumeric:"tabular-nums" }}
               placeholder="0"
             />
-            <div style={{ padding: "6px 14px", borderRadius: "10px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}` }}>
-              <span style={{ color: IVORY, fontSize: "13px", fontWeight: 500, opacity: 0.7 }}>{from}</span>
-            </div>
+            <div style={{ padding:"8px 14px", borderRadius:"12px", background:"var(--dark)", color:"#fff", fontSize:"13px", fontWeight:700, letterSpacing:"0.04em" }}>RUB</div>
           </div>
-          <div style={{ color: "rgba(245,240,232,0.18)", fontSize: "11px", marginTop: "6px" }}>≈ ${(num * 0.011).toFixed(0)} USD</div>
+          <div style={{ fontSize:"11px", color:"var(--ink-35)", marginTop:"6px" }}>≈ ${(num*0.011).toFixed(2)} USD</div>
         </div>
 
-        {/* Arrow */}
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <div style={{ width: "30px", height: "30px", borderRadius: "10px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "rgba(245,240,232,0.4)", fontSize: "14px", fontWeight: 200 }}>↓</span>
+        {/* Swap arrow */}
+        <div style={{ display:"flex", justifyContent:"center", margin:"4px 0" }}>
+          <div style={{ width:"34px", height:"34px", borderRadius:"11px", background:"var(--surface)", border:"1px solid var(--border)", boxShadow:"var(--shadow-sm)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-60)" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
           </div>
         </div>
 
         {/* Receive */}
-        <div style={{ padding: "18px 20px", borderRadius: "18px", background: IVORY_DIM, border: `1px solid rgba(212,146,106,0.15)` }}>
-          <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px" }}>They Receive</div>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ flex: 1, fontSize: "28px", fontWeight: 200, color: WARM, letterSpacing: "-1px" }}>{received}</div>
-            <div style={{ position: "relative" }}>
-              <select
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                style={{
-                  padding: "6px 28px 6px 14px", borderRadius: "10px",
-                  background: "rgba(212,146,106,0.08)", border: "1px solid rgba(212,146,106,0.2)",
-                  color: WARM, fontSize: "13px", fontWeight: 500, cursor: "pointer", outline: "none",
-                }}
+        <div style={{ padding:"16px", borderRadius:"16px", background:"var(--ink-04)", border:"1px solid var(--border)" }}>
+          <div style={{ fontSize:"10px", color:"var(--ink-35)", fontWeight:600, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:"10px" }}>They Receive</div>
+          <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
+            <div style={{ flex:1, fontSize:"30px", fontWeight:300, color:"var(--ink)", letterSpacing:"-1px" }}>{received}</div>
+            <div style={{ position:"relative" }}>
+              <select value={to} onChange={e=>setTo(e.target.value)}
+                style={{ padding:"8px 32px 8px 14px", borderRadius:"12px", background:"var(--dark)", color:"#fff", fontSize:"13px", fontWeight:700, border:"none", cursor:"pointer", outline:"none", letterSpacing:"0.04em" }}
               >
-                {targets.map((t) => <option key={t} value={t} style={{ background: "#0a0908" }}>{t}</option>)}
+                {TARGETS.map(t=><option key={t} value={t} style={{ background:"#1a1a1a" }}>{t}</option>)}
               </select>
+              <svg style={{ position:"absolute", right:"10px", top:"50%", transform:"translateY(-50%)", pointerEvents:"none" }} width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
           </div>
-          <div style={{ color: "rgba(245,240,232,0.18)", fontSize: "11px", marginTop: "6px" }}>1 {from} = {rate} {to}</div>
+          <div style={{ fontSize:"11px", color:"var(--ink-35)", marginTop:"6px" }}>Rate: 1 RUB = {rate} {to}</div>
         </div>
       </div>
 
-      {/* Route card */}
-      <div style={{ padding: "18px 20px", borderRadius: "18px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, marginBottom: "20px" }}>
-        <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "14px" }}>Live Routing Path</div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
-          {[
-            { label: from, sub: "Fiat" },
-            { label: "→", sub: null },
-            { label: "USDT", sub: "~30s" },
-            { label: "→", sub: null },
-            { label: to, sub: "~2m" },
-          ].map((s, i) => s.sub === null
-            ? <span key={i} style={{ color: "rgba(245,240,232,0.15)", fontSize: "14px" }}>{s.label}</span>
-            : (
-              <div key={i} style={{ padding: "6px 12px", borderRadius: "10px", background: s.label === to ? "rgba(212,146,106,0.1)" : IVORY_DIM, border: `1px solid ${s.label === to ? "rgba(212,146,106,0.2)" : IVORY_BORDER}` }}>
-                <div style={{ color: s.label === to ? WARM : IVORY, fontSize: "12px", fontWeight: 500, opacity: s.label === to ? 1 : 0.7 }}>{s.label}</div>
-                <div style={{ color: "rgba(245,240,232,0.2)", fontSize: "9px", marginTop: "1px" }}>{s.sub}</div>
-              </div>
-            )
-          )}
+      {/* Route */}
+      <div className="fade-up card-sm" style={{ padding:"16px 18px", marginBottom:"14px", animationDelay:"0.1s" }}>
+        <div style={{ fontSize:"10px", color:"var(--ink-35)", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:600, marginBottom:"12px" }}>Live Routing Path</div>
+        <div style={{ display:"flex", alignItems:"center", gap:"6px", marginBottom:"14px", flexWrap:"wrap" }}>
+          <RouteStep label="RUB" sub="Fiat" />
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-18)" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <RouteStep label="USDT" sub="~30s" />
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-18)" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <RouteStep label={to} sub="~2m" highlight />
         </div>
-
-        <Row label="Total Fee" value={`0.25% · ~${fee} ${from}`} />
-        <Row label="Est. Time" value="~2m 30s" />
-        <Row label="Legal Node" value="BY-PBT-012 · Verified" highlight />
-        <Row label="Protocol" value="PBT Broker Layer v3" />
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"8px" }}>
+          {[{ l:"Total Fee", v:`~${fee} RUB` }, { l:"Est. Time", v:"~2m 30s" }, { l:"Legal Node", v:"BY-PBT-012" }].map(r=>(
+            <div key={r.l} style={{ textAlign:"center" }}>
+              <div style={{ fontSize:"9px", color:"var(--ink-35)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"4px" }}>{r.l}</div>
+              <div style={{ fontSize:"12px", fontWeight:600, color:"var(--ink)" }}>{r.v}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Notice */}
-      <div style={{ padding: "12px 16px", borderRadius: "14px", background: IVORY_DIM, border: `1px solid ${IVORY_BORDER}`, marginBottom: "20px" }}>
-        <p style={{ color: "rgba(245,240,232,0.2)", fontSize: "10px", lineHeight: 1.7 }}>
-          Compliant with Decree No. 19 (BY) · Federal Law No. 259-FZ (RU). All routing through licensed PBT brokers with full KYC/AML.
+      {/* Compliance */}
+      <div className="fade-up" style={{ padding:"12px 16px", borderRadius:"14px", background:"var(--ink-04)", border:"1px solid var(--border)", marginBottom:"16px", animationDelay:"0.12s" }}>
+        <p style={{ fontSize:"10px", color:"var(--ink-35)", lineHeight:1.7 }}>
+          Compliant with Decree No. 19 (BY) and Federal Law 259-FZ (RU). All transfers routed through licensed PBT brokers with full KYC/AML screening.
         </p>
       </div>
 
-      {/* CTA */}
-      <button
-        onClick={execute}
-        disabled={state !== "idle"}
-        style={{
-          width: "100%", padding: "18px", borderRadius: "18px",
-          fontSize: "13px", fontWeight: 500, letterSpacing: "0.06em",
-          cursor: state === "idle" ? "pointer" : "default",
-          border: "none", transition: "all 0.3s",
-          background: state === "done"
-            ? "rgba(212,146,106,0.1)"
-            : state === "loading"
-            ? "rgba(245,240,232,0.04)"
-            : "linear-gradient(135deg, rgba(212,146,106,0.9), rgba(190,116,82,0.9))",
-          color: state === "idle" ? "#0a0908" : WARM,
-          boxShadow: state === "idle" ? "0 0 30px rgba(212,146,106,0.2)" : "none",
-        }}
-      >
-        {state === "done" ? "✓  Transfer Initiated" : state === "loading" ? "Processing…" : "Execute Legal Transfer"}
-      </button>
+      <div className="fade-up" style={{ animationDelay:"0.14s" }}>
+        <PrimaryBtn label="Execute Legal Transfer" onClick={execute} state={txState} />
+      </div>
     </div>
   );
 }
